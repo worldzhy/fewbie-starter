@@ -1,0 +1,36 @@
+# Build gate for the fewbie starter template.
+#
+# This repo IS the template (ADR-004 in worldzhy/fewbie) — nightwatch's GitHub
+# generate flow clones it as-is. A green build here is the only guarantee that
+# generated apps start from a working skeleton, so every push and PR must
+# produce a clean `next build`.
+name: ci
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # Lockfile is tracked, so npm ci gives a reproducible install that
+      # matches what the maintainer validated locally.
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Build
+        run: npm run build

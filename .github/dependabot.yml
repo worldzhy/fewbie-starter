@@ -23,6 +23,23 @@ updates:
       patch-updates:
         update-types:
           - "patch"
+      # react and react-dom must always move in lockstep (react-dom pins a
+      # peer on the exact react version). Without this group, dependabot
+      # opens one PR per package and the second one fails npm ci on the
+      # peer mismatch until the first is merged.
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      # next and eslint-config-next ship together; mismatched versions cause
+      # lint/build skew.
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+          - "@next/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"

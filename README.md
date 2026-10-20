@@ -1,6 +1,6 @@
 # fewbie basic template
 
-The starter template scaffolded by [`fewbie init`](https://github.com/worldzhy/fewbie):
+The starter template scaffolded by [`fewbie create`](https://github.com/worldzhy/fewbie):
 Next.js (App Router, TypeScript, Turbopack) + Tailwind CSS v4 + shadcn/ui.
 
 ## Scripts
@@ -32,6 +32,22 @@ fewbie registry.
 both env vars are set (see `.env.example`):
 
 - `HEARTBEAT_ENDPOINT` — full heartbeat report URL (e.g. `https://host/heartbeat/ping`)
-- `HEARTBEAT_TOKEN` — installation token (sent as `X-Heartbeat-Token`)
+- `HEARTBEAT_TOKEN` — installation token (sent as `Authorization: Bearer <token>`; the
+  `X-Heartbeat-Token` header remains accepted as a deprecated alias during the SDK migration window)
 
 Without them the hook is a no-op.
+
+## Web monitor (optional, browser side)
+
+`src/components/web-monitor.tsx` is mounted in the root layout. It dynamically
+imports `@devbie/web-monitor-sdk` in the browser (kept out of SSR/Edge) and
+reports page views, AJAX, resources and errors when all three env vars are set
+(see `.env.example`):
+
+- `NEXT_PUBLIC_WEB_MONITOR_ENDPOINT` — report endpoint URL
+- `NEXT_PUBLIC_WEB_MONITOR_APP_ID` — application id (public partition key)
+- `NEXT_PUBLIC_WEB_MONITOR_TOKEN` — report token
+
+`NEXT_PUBLIC_` values are inlined at build time, so set them before
+`next build`, not only at runtime. Without all three the component is a no-op
+(it warns in development only).

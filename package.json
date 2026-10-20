@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "next dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint",
+    "start": "next start"
   },
   "dependencies": {
     "@devbie/heartbeat-sdk": "^1.1.0",

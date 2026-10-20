@@ -32,5 +32,8 @@ jobs:
       - name: Install
         run: npm ci --no-audit --no-fund
 
+      - name: Format check
+        run: npm run format:check
+
       - name: Build
         run: npm run build

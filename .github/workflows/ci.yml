@@ -1,6 +1,6 @@
 # Build gate for the fewbie starter template.
 #
-# This repo IS the template (ADR-004 in worldzhy/fewbie) — nightwatch's GitHub
+# This repo IS the template (ADR-003 in worldzhy/newbie) — nightwatch's GitHub
 # generate flow clones it as-is. A green build here is the only guarantee that
 # generated apps start from a working skeleton, so every push and PR must
 # produce a clean `next build`.

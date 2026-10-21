@@ -1,6 +1,6 @@
 # fewbie basic template
 
-The starter template scaffolded by [`fewbie create`](https://github.com/worldzhy/fewbie):
+The starter template scaffolded by [`fewbie create`](https://github.com/worldzhy/newbie/tree/dev/packages/fewbie-cli):
 Next.js (App Router, TypeScript, Turbopack) + Tailwind CSS v4 + shadcn/ui.
 
 ## Scripts

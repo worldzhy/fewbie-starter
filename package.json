@@ -9,6 +9,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint",
+    "prepare": "command -v git >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
     "start": "next start"
   },
   "dependencies": {

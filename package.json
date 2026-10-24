@@ -5,7 +5,7 @@
   "prettier": "@devbie/style-guide/prettier",
   "scripts": {
     "build": "next build",
-    "check:template": "fewbie template sync --check --template-path .",
+    "check:template": "fewbie template update --check --template-path .",
     "dev": "next dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

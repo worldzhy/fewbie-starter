@@ -5,6 +5,7 @@
   "prettier": "@devbie/style-guide/prettier",
   "scripts": {
     "build": "next build",
+    "check:template": "fewbie template sync --check --template-path .",
     "dev": "next dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -28,6 +29,7 @@
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
+    "@devbie/fewbie-cli": "*",
     "@devbie/style-guide": "^1.4.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^26",

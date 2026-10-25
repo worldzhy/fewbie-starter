@@ -23,7 +23,7 @@ npx shadcn@latest add <component>
 ```
 
 Standard ui primitives come straight from shadcn/ui; fewbie-specific business
-components and logic utils are installed with `fewbie add <name>` from the
+components and logic utils are added with `fewbie modules add <name>` from the
 fewbie registry.
 
 ## Heartbeat (optional)

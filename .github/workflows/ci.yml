@@ -37,6 +37,12 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      # ADR-025: no template file may also be owned by a registry item, and the
+      # template's framework/marked files must stay well-formed (the CLI
+      # reports self-comparison explicitly instead of pretending to gate drift).
+      - name: Template ownership check
+        run: npm run check:template
+
       - name: Lint
         run: npm run lint
 

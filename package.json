@@ -11,7 +11,9 @@
     "format:check": "prettier --check .",
     "lint": "eslint",
     "prepare": "command -v git >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@devbie/heartbeat-sdk": "^1.2.0",
@@ -38,6 +40,7 @@
     "eslint": "^9",
     "prettier": "^3.9.9",
     "tailwindcss": "^4",
-    "typescript": "^6"
+    "typescript": "^6",
+    "vitest": "^5.1.0"
   }
 }

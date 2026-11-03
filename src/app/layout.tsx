@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getLocale, setRequestLocale } from "next-intl/server";
 import { WebMonitor } from "@/components/web-monitor";
+import { type Locale } from "@/i18n/config";
 import "./globals.css";
+
+// Locale resolution reads the NEXT_LOCALE cookie, so every render depends on
+// request state. Force the root layout to render dynamically instead of
+// prerendering a single baked locale.
+export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,12 +26,18 @@ export const metadata: Metadata = {
   description: "Basic template: Next.js App Router + Tailwind CSS + shadcn/ui",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = (await getLocale()) as Locale;
+  setRequestLocale(locale);
+  const messages = await getMessages();
+
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <WebMonitor />
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <WebMonitor />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

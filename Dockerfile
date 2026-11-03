@@ -12,8 +12,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 COPY . .
-# The default Next output is .next/standalone (Next 15 default). It bundles
-# server deps internally, so we only need the file tree the Next CLI built.
+# next.config.ts sets output: "standalone", so the build emits a
+# self-contained server bundle. It bundles server deps internally, so the
+# runtime stage only needs the file tree the Next CLI built.
 RUN npm run build
 
 FROM node:22-alpine AS runtime

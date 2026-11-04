@@ -1,0 +1,14 @@
+node_modules
+dist
+.next
+.git
+.github
+.trae
+*.log
+.DS_Store
+.env*
+!.env.example
+coverage
+.vercel
+out
+storybook-static

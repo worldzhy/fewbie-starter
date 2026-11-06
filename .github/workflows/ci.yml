@@ -21,7 +21,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
 
@@ -49,3 +49,8 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Image gate (R15-06): generated apps deploy this Dockerfile, so a broken
+      # build must fail here instead of at the consumer's first deployment.
+      - name: Docker image build
+        run: docker build --pull -t fewbie-starter:ci .

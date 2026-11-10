@@ -31,16 +31,16 @@ This repository is a [fewbie](https://github.com/worldzhy/devbie) application (N
 
 <!-- Project-specific agent instructions go below; template update never rewrites this area. -->
 
-## Workflow conventions (见 `user_profile.md` 全文)
+## Workflow conventions (see `user_profile.md` for full text)
 
-- Git 分支：dev 开发，main 禁止直写
-- 提交前门禁：`npm run format:check` 必过；禁止裸 `git add -A`
-- 本仓是模板仓，不发 npm 包；skeleton 更新由 fewbie CLI 管理（`fewbie template update`）
-- `NEXT_PUBLIC_*` 变量在 build 时内联，务必在 `npm run build` 前设好
+- Git branch: dev, never main
+- Pre-commit gate: `npm run format:check` must pass; never bare `git add -A`
+- This repo is a starter template, not an npm publisher; skeleton updates via `fewbie template update`
+- `NEXT_PUBLIC_*` vars are inlined at build time — set before `npm run build`
 
 ## Env facts
 
-可执行操作手册统一在 devbie 仓 `.trae/documents/env-setup.md`。Shell 调用前先读该文件。
+Executable operation manuals live in devbie `.trae/documents/env-setup.md`. Read that file before any Shell call.
 
 ## Backlog convention
 

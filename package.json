@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@devbie/fewbie-cli": "^1.4.6",
-    "@devbie/style-guide": "^1.5.0",
+    "@devbie/style-guide": "^1.6.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^26",
     "@types/react": "^19",

@@ -9,6 +9,7 @@
    utility names (its skills directory is a symlink and can point outside the
    project root, which Turbopack rejects). */
 @source not "../../.trae";
+/* fewbie:framework:end */
 
 @theme inline {
   --color-background: var(--background);
@@ -134,4 +135,3 @@
     @apply font-sans;
   }
 }
-/* fewbie:framework:end */

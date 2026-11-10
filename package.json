@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@devbie/heartbeat-sdk": "^1.2.1",
-    "@devbie/web-monitor-sdk": "^1.6.0",
+    "@devbie/frontend-monitor-sdk": "^1.7.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "lucide-react": "^1.69.0",

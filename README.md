@@ -39,13 +39,13 @@ Without them the hook is a no-op.
 
 ## Web monitor (optional, browser side)
 
-`src/components/web-monitor.tsx` is mounted in the root layout. It dynamically
-imports `@devbie/web-monitor-sdk` in the browser (kept out of SSR/Edge) and
+`src/components/frontend-monitor.tsx` is mounted in the root layout. It dynamically
+imports `@devbie/frontend-monitor-sdk` in the browser (kept out of SSR/Edge) and
 reports page views, AJAX, resources and errors when both env vars are set
 (see `.env.example`):
 
-- `NEXT_PUBLIC_WEB_MONITOR_ENDPOINT` — report endpoint URL
-- `NEXT_PUBLIC_WEB_MONITOR_TOKEN` — report token (identifies the application)
+- `NEXT_PUBLIC_FRONTEND_MONITOR_ENDPOINT` — report endpoint URL
+- `NEXT_PUBLIC_FRONTEND_MONITOR_TOKEN` — report token (identifies the application)
 
 `NEXT_PUBLIC_` values are inlined at build time, so set them before
 `next build`, not only at runtime. Without both the component is a no-op

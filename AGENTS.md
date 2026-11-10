@@ -18,15 +18,32 @@ This repository is a [fewbie](https://github.com/worldzhy/devbie) application (N
 
 - Add shadcn/ui primitives with `npx shadcn@latest add <component>`.
 - Add business components and logic utils with `npx fewbie modules add <name>`.
+- Keep host Next.js config in `next.config.ts` by passing it to `withFewbie()`; framework defaults (host-overridable) and invariants (not overridable) live in `next.config.framework.ts`.
+- Keep host entries outside the `fewbie:framework` blocks: project instructions here, host variables in `.env.example`, host ignores in `.prettierignore`.
 - Remember that `NEXT_PUBLIC_*` variables are inlined at build time; set them before `npm run build`.
 - Pull skeleton updates with `npx fewbie template update`, then review with `git diff`.
 - Verify changes with `npm run lint` and `npm run build`.
 
 ### Don't
 
-- Never edit framework-synced files: `next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `eslint.config.mjs`, `components.json`, `.prettierignore`, `.env.example`, `src/instrumentation.ts`, `src/lib/utils.ts`. Propose skeleton changes in the [fewbie-starter](https://github.com/worldzhy/fewbie-starter) template instead.
-- Never edit inside the `fewbie:framework` block of `src/app/globals.css` or of this file.
+- Never edit framework-synced files: `next.config.framework.ts`, `tsconfig.json`, `postcss.config.mjs`, `eslint.config.mjs`, `components.json`, `src/instrumentation.ts`, `src/lib/utils.ts`. Propose skeleton changes in the [fewbie-starter](https://github.com/worldzhy/fewbie-starter) template instead.
+- Never edit inside a `fewbie:framework` block (`src/app/globals.css`, `.env.example`, `.prettierignore`, this file); `template update` replaces the block wholesale.
 
 <!-- fewbie:framework:end -->
 
 <!-- Project-specific agent instructions go below; template update never rewrites this area. -->
+
+## Workflow conventions (see `user_profile.md` for full text)
+
+- Git branch: dev, never main
+- Pre-commit gate: `npm run format:check` must pass; never bare `git add -A`
+- This repo is a starter template, not an npm publisher; skeleton updates via `fewbie template update`
+- `NEXT_PUBLIC_*` vars are inlined at build time — set before `npm run build`
+
+## Env facts
+
+Executable operation manuals live in devbie `.trae/documents/env-setup.md`. Read that file before any Shell call.
+
+## Backlog convention
+
+Unfinished engineering tasks live in the backlog file under .trae/documents (backlog.md). At session end, append leftover tasks there; at session start, check it for pending work. Delete items when done.

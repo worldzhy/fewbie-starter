@@ -30,3 +30,18 @@ This repository is a [fewbie](https://github.com/worldzhy/devbie) application (N
 <!-- fewbie:framework:end -->
 
 <!-- Project-specific agent instructions go below; template update never rewrites this area. -->
+
+## Workflow conventions (见 `user_profile.md` 全文)
+
+- Git 分支：dev 开发，main 禁止直写
+- 提交前门禁：`npm run format:check` 必过；禁止裸 `git add -A`
+- 本仓是模板仓，不发 npm 包；skeleton 更新由 fewbie CLI 管理（`fewbie template update`）
+- `NEXT_PUBLIC_*` 变量在 build 时内联，务必在 `npm run build` 前设好
+
+## Env facts
+
+可执行操作手册统一在 devbie 仓 `.trae/documents/env-setup.md`。Shell 调用前先读该文件。
+
+## Backlog convention
+
+Unfinished engineering tasks live in the backlog file under .trae/documents (backlog.md). At session end, append leftover tasks there; at session start, check it for pending work. Delete items when done.

@@ -5,6 +5,11 @@
 @custom-variant dark (&:is(.dark *));
 
 /* fewbie:framework:start */
+/* Agent notes and skills live under .trae; Tailwind must not scan them for
+   utility names (its skills directory is a symlink and can point outside the
+   project root, which Turbopack rejects). */
+@source not "../../.trae";
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

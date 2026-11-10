@@ -15,8 +15,8 @@
     "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
-    "@devbie/heartbeat-sdk": "^1.2.1",
     "@devbie/frontend-monitor-sdk": "^1.7.0",
+    "@devbie/heartbeat-sdk": "^1.2.1",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "lucide-react": "^1.69.0",

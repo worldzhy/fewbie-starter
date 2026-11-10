@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale, setRequestLocale } from "next-intl/server";
-import { WebMonitor } from "@/components/web-monitor";
+import { FrontendMonitor } from "@/components/frontend-monitor";
 import { type Locale } from "@/i18n/config";
 import "./globals.css";
 
@@ -35,7 +35,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <WebMonitor />
+          <FrontendMonitor />
           {children}
         </NextIntlClientProvider>
       </body>

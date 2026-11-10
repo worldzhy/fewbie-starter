@@ -47,6 +47,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # A test that only runs locally does not gate the generated skeleton
+      # (R20-26): the smoke test ships with the template, so CI must run it.
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
 

@@ -42,7 +42,7 @@ This repository is a [fewbie](https://github.com/worldzhy/devbie) application (N
 
 ## Env facts
 
-Executable operation manuals live in devbie `.trae/documents/env-setup.md`. Read that file before any Shell call.
+Executable operation manuals live in devbie `.trae/documents/environment-runbook.md`. Read that file before any Shell call.
 
 ## Backlog convention
 

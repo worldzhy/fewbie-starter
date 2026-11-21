@@ -41,6 +41,21 @@ const PALETTE_SYNTAX = [
   },
 ];
 
+// Colors set through inline styles bypass the className scan entirely (R1-15).
+const STYLE_COLOR = /^(?:#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\()/;
+const STYLE_COLOR_PROPERTY = /^(?:color|background|backgroundColor|borderColor|fill|stroke)$/;
+
+const STYLE_COLOR_SYNTAX = [
+  {
+    selector: `JSXAttribute[name.name="style"] Property[key.name=/${STYLE_COLOR_PROPERTY.source}/] > Literal[value=/${STYLE_COLOR.source}/]`,
+    message: "Use a semantic token (var(--primary), ...) instead of a hard-coded color in an inline style (R3).",
+  },
+  {
+    selector: `JSXAttribute[name.name="style"] Property[key.name=/${STYLE_COLOR_PROPERTY.source}/] TemplateLiteral > TemplateElement[value.raw=/${STYLE_COLOR.source}/]`,
+    message: "Use a semantic token (var(--primary), ...) instead of a hard-coded color in an inline style (R3).",
+  },
+];
+
 const OFF_SCALE_SYNTAX = [
   {
     selector: `Literal[value=/${OFF_SCALE_SPACING.source}/]`,
@@ -85,6 +100,7 @@ export const frameworkLintConfig = [
         // R3: data colors come from chart-palette, UI colors from semantic tokens.
         // R6: radius and spacing only from the design scale.
         ...PALETTE_SYNTAX,
+        ...STYLE_COLOR_SYNTAX,
         ...OFF_SCALE_SYNTAX,
         // R2: loading surfaces come from the shared state components.
         {
@@ -142,7 +158,7 @@ export const frameworkLintConfig = [
     // code copies, so they must pass the same token, scale and copy gates.
     files: FRAMEWORK_CODE,
     rules: {
-      "no-restricted-syntax": ["error", ...PALETTE_SYNTAX, ...OFF_SCALE_SYNTAX],
+      "no-restricted-syntax": ["error", ...PALETTE_SYNTAX, ...STYLE_COLOR_SYNTAX, ...OFF_SCALE_SYNTAX],
       "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
     },
   },

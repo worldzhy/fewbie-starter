@@ -2,8 +2,8 @@
 
 import type { EChartsCoreOption } from "./echarts";
 import { EChart } from "./e-chart";
-import { CHART_PALETTE, paletteColor, withAlpha } from "./chart-palette";
-import { CHART_TOOLTIP_STYLE } from "./chart-theme";
+import { chartPalette, paletteColor, withAlpha } from "./chart-palette";
+import { chartTooltipStyle } from "./chart-theme";
 
 export type DataChartType = "line" | "bar" | "pie" | "doughnut";
 
@@ -60,7 +60,8 @@ function buildOption({
   seriesOverrides,
 }: Omit<DataChartProps, "className" | "style" | "optionOverrides">): EChartsCoreOption {
   const isCartesian = chartType === "line" || chartType === "bar";
-  const colorAt = (dataset: DataChartDataset, index: number) => dataset.color ?? paletteColor(index);
+  const palette = chartPalette();
+  const colorAt = (dataset: DataChartDataset, index: number) => dataset.color ?? paletteColor(index, palette);
 
   const series: Record<string, unknown>[] = isCartesian
     ? datasets.map((dataset, index) => {
@@ -102,7 +103,7 @@ function buildOption({
       });
 
   return {
-    color: [...CHART_PALETTE],
+    color: [...palette],
     title: title ? { text: title, left: "center", top: 0, textStyle: { fontSize: 14, fontWeight: 600 } } : undefined,
     legend: {
       top: title ? 28 : 0,
@@ -111,7 +112,7 @@ function buildOption({
       itemHeight: 12,
       textStyle: { fontSize: 11 },
     },
-    tooltip: { trigger: isCartesian ? "axis" : "item", ...CHART_TOOLTIP_STYLE },
+    tooltip: { trigger: isCartesian ? "axis" : "item", ...chartTooltipStyle() },
     grid: isCartesian ? { top: title ? 64 : 40, left: 8, right: 16, bottom: 4, containLabel: true } : undefined,
     xAxis: isCartesian
       ? {

@@ -1,11 +1,20 @@
-// Single source of truth for chart colors. Canvas-based chart engines cannot
-// consume CSS variables, so the cyclic palette stays aligned with the design
-// accent scale by hand.
+// Chart colors come from the `--chart-*` design tokens. Canvas rendering
+// cannot read CSS variables, so the tokens are resolved to concrete colors at
+// render time. The literals below are the light-theme fallbacks used before the
+// DOM exists (server render, tests) and are asserted against globals.css by
+// chart-tokens.test.ts, so the two cannot drift.
 
-export const CHART_PALETTE = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#6b7280"] as const;
+export const CHART_PALETTE = ["#2563eb", "#00b42a", "#ffaa00", "#f53f3f", "#8490a3", "#8b5cf6"] as const;
 
-export function paletteColor(index: number): string {
-  return CHART_PALETTE[index % CHART_PALETTE.length];
+/** Palette of the active theme, falling back to the light tokens off-DOM. */
+export function chartPalette(): readonly string[] {
+  if (typeof document === "undefined") return CHART_PALETTE;
+  const styles = getComputedStyle(document.documentElement);
+  return CHART_PALETTE.map((fallback, index) => styles.getPropertyValue(`--chart-${index + 1}`).trim() || fallback);
+}
+
+export function paletteColor(index: number, palette: readonly string[] = CHART_PALETTE): string {
+  return palette[index % palette.length];
 }
 
 export function withAlpha(hex: string, alpha: number): string {

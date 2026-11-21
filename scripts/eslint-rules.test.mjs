@@ -93,6 +93,23 @@ test("R3 rejects raw palette classes", async () => {
   assert.ok(errors(messages, "no-restricted-syntax").some((message) => message.text.includes("(R3)")));
 });
 
+test("R3 also rejects hard-coded colors in inline styles", async () => {
+  const hex = await lintFixture({
+    "src/features/status.tsx": 'export function Status() { return <div style={{ color: "#ff0000" }} />; }',
+  });
+  assert.ok(errors(hex, "no-restricted-syntax").some((message) => message.text.includes("(R3)")));
+
+  const rgb = await lintFixture({
+    "src/features/status.tsx": 'export function Status() { return <div style={{ backgroundColor: "rgb(0 0 0)" }} />; }',
+  });
+  assert.ok(errors(rgb, "no-restricted-syntax").some((message) => message.text.includes("(R3)")));
+
+  const token = await lintFixture({
+    "src/features/status.tsx": 'export function Status() { return <div style={{ color: "var(--primary)" }} />; }',
+  });
+  assert.deepEqual(errors(token, "no-restricted-syntax"), []);
+});
+
 test("R6 rejects off-scale radius and arbitrary spacing", async () => {
   const messages = await lintFixture({
     "src/app/page.tsx": 'export function Page() { return <div className="rounded-xl p-[13px]" />; }',

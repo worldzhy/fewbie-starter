@@ -10,5 +10,4 @@ Unfinished engineering tasks. Completed items are deleted (git history is the ar
 
 ## 组件体系评审 round1 残余（2026-11-21，台账 `.trae/documents/findings.md`）
 
-- 发布 `@devbie/fewbie-cli` 1.6.3 后重跑 `npm run check:template`（本地 1.6.2 缺 M2 注册表条目）。
-- 发布后确认 `digest` 字段随 CLI 一起生效：宿主用旧 CLI 收到的清单不含 `digest`，升级到含本改动的版本后首次 `template update` 会补齐（ADR-002）。
+（已全部关闭：CLI 1.12.0 发布后 `check:template` 绿——2026-11-22 用 `1.12.0` 重跑通过；`digest` 字段已随 `.fewbie/framework.json` 落地。）

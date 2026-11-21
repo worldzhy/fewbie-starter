@@ -47,6 +47,19 @@ test("R1 rejects a hand-written h1 and a raw JSX root", () => {
   assert.equal(inspectPage("export default function P() { return <main>Users</main>; }").length, 1);
 });
 
+test("R1 only counts PageShell when the code uses it", () => {
+  // Comments are prose: mentioning the shell there does not satisfy the contract,
+  // and a commented-out heading is not a hand-written one.
+  const commentOnly = [
+    "// TODO: wrap in PageShell later",
+    "export default function P() {",
+    "  return <div>Body</div>;",
+    "}",
+  ].join("\n");
+  assert.equal(inspectPage(commentOnly).length, 1);
+  assert.deepEqual(inspectPage("// <h1>Old title</h1>\nexport default function P() { return <UserList />; }"), []);
+});
+
 test("R1 scans every page.tsx and reports only the violating one", async () => {
   const violations = await withProject(
     {

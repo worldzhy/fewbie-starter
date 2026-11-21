@@ -18,6 +18,12 @@ import { listFiles, pathExists } from "./lib/walk.mjs";
 const HAND_WRITTEN_H1 = /<h1[\s>]/;
 const JSX_TAG = /<([A-Za-z][\w.]*)/;
 const PAGE_CONTRACT_REFERENCE = /\b(PageShell|PageHeader)\b/;
+const COMMENT = /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;
+
+/** Comments are prose, not implementation: a mention there satisfies nothing. */
+function stripComments(source) {
+  return source.replace(COMMENT, "");
+}
 
 function rootJsxTag(source) {
   const returned = source.match(/return\s*\(?\s*<([A-Za-z][\w.]*)/);
@@ -28,13 +34,14 @@ function rootJsxTag(source) {
 
 /** Messages for one page source; empty means the page satisfies R1. */
 export function inspectPage(source) {
+  const code = stripComments(source);
   const violations = [];
-  if (HAND_WRITTEN_H1.test(source)) {
+  if (HAND_WRITTEN_H1.test(code)) {
     violations.push("hand-written <h1>: let PageShell/PageHeader render the page title");
   }
-  if (!JSX_TAG.test(source)) return violations;
-  if (PAGE_CONTRACT_REFERENCE.test(source)) return violations;
-  const rootTag = rootJsxTag(source);
+  if (!JSX_TAG.test(code)) return violations;
+  if (PAGE_CONTRACT_REFERENCE.test(code)) return violations;
+  const rootTag = rootJsxTag(code);
   // Delegating to a feature component is allowed; the component owns the shell.
   if (rootTag && /^[A-Z]/.test(rootTag)) return violations;
   violations.push("page JSX must render PageShell or delegate to a component that does");

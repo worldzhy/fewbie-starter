@@ -37,9 +37,13 @@ const geistMono = localFont({
   display: "swap",
 });
 
+// The root layout is framework-owned, so hosts cannot edit these strings.
+// They come from build-time environment variables with a neutral fallback
+// instead of hard-coding the template name into every product page (R83-20).
+// NEXT_PUBLIC_* values are inlined by `next build`, so set them before building.
 export const metadata: Metadata = {
-  title: "fewbie",
-  description: "Basic template: Next.js App Router + Tailwind CSS + shadcn/ui",
+  title: process.env.NEXT_PUBLIC_APP_NAME ?? "fewbie",
+  description: process.env.NEXT_PUBLIC_APP_DESCRIPTION ?? "Next.js App Router application",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

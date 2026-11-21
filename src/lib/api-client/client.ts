@@ -8,7 +8,7 @@
 
 import axios, { type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 
-import { API_TIMEOUT_MS, AUTH_PATH_PATTERN, ApiEnvelope, BASE_URL, isEnvelope, isTrustedApiTarget } from "./protocol";
+import { API_TIMEOUT_MS, ApiEnvelope, BASE_URL, isAuthPath, isEnvelope, isTrustedApiTarget } from "./protocol";
 import { ApiError, isRefreshable } from "./failure";
 import { endSession } from "./session-store";
 import { notifyError } from "./error-channel";
@@ -58,10 +58,10 @@ api.interceptors.request.use(async (config) => {
   // gate, which establishes the cold-start session and renews a token that is
   // about to expire. /auth/* stays exempt because those calls are the login
   // flow itself (and the refresh exchange bypasses this instance).
-  const isAuthPath = AUTH_PATH_PATTERN.test(config.url ?? "");
+  const isAuthRequest = isAuthPath(config.url);
   // Auth calls are the login flow itself: they must go out anonymously, so a
   // stale token from a previous session is never attached (R82-17).
-  const token = trusted && !isAuthPath ? await ensureFreshToken() : null;
+  const token = trusted && !isAuthRequest ? await ensureFreshToken() : null;
   // Within the interceptor chain headers is always an AxiosHeaders instance.
   if (token && trusted) {
     config.headers.set("Authorization", `Bearer ${token}`);
@@ -91,8 +91,7 @@ api.interceptors.response.use(
   async (error) => {
     const original = error?.config as RotatingRequestConfig | undefined;
     const url: string = original?.url ?? "";
-    const canSilentlyRefresh =
-      typeof window !== "undefined" && !original?._retriedAfterRefresh && !AUTH_PATH_PATTERN.test(url);
+    const canSilentlyRefresh = typeof window !== "undefined" && !original?._retriedAfterRefresh && !isAuthPath(url);
 
     // Single normalization for every final failure: the kind decides both the
     // refresh policy and what the UI shows (ADR-048 §4).
@@ -130,7 +129,7 @@ api.interceptors.response.use(
       // exchange): same end state, but the login page must show the notice.
       endSession("account-blocked");
       if (original) original.enabledDefaultErrorToast = false;
-    } else if (normalized.kind === "session-terminated" && !AUTH_PATH_PATTERN.test(url)) {
+    } else if (normalized.kind === "session-terminated" && !isAuthPath(url)) {
       // A terminal 401 from a non-axios-flagged path (e.g. the request already
       // replayed once): the session cannot be revived.
       endSession("session-terminated");

@@ -1,11 +1,22 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import type { EChartsCoreOption } from "./echarts";
 import { EChart } from "./e-chart";
 import { chartPalette, chartGridColor, paletteColor, withAlpha } from "./chart-palette";
 import { chartTooltipStyle } from "./chart-theme";
 
 export type DataChartType = "line" | "bar" | "pie" | "doughnut";
+
+// Screen-reader labels live in `framework.common`; a template literal here
+// escaped `react/jsx-no-literals` and never followed the locale (R83-22).
+const CHART_LABEL_KEYS = {
+  line: "chartLine",
+  bar: "chartBar",
+  pie: "chartPie",
+  doughnut: "chartDoughnut",
+} as const;
 
 export interface DataChartDataset {
   label: string;
@@ -150,8 +161,8 @@ function buildOption({
  */
 export function DataChart(props: DataChartProps) {
   const { className, style, optionOverrides, ...rest } = props;
+  const tc = useTranslations("framework.common");
   const option = mergeOption(buildOption(rest), optionOverrides);
-  return (
-    <EChart option={option} className={className} style={style} ariaLabel={rest.title ?? `${rest.chartType} chart`} />
-  );
+  const ariaLabel = rest.title ?? tc(CHART_LABEL_KEYS[rest.chartType]);
+  return <EChart option={option} className={className} style={style} ariaLabel={ariaLabel} />;
 }

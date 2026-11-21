@@ -1,10 +1,10 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "2312dc71d7a9e4b59326d4991fbb162abde8d1ea60abe89ea7ba33383ec62efa",
+  "digest": "fc19360f6b7e20d9f7dacb7322746a2c6d44f0bdad0284cb5727a2630a66d38e",
   "files": {
     "components.json": "a7720c54d6a109d6063937fac1c7766c44a1020cdbe43eb489ca2cb126fbbaa9",
-    "eslint.config.mjs": "12abdbe56a32a76837a3100a8b34fe8296d3a4a179138f140f87d652255b0bb4",
+    "eslint.config.mjs": "f9699581ee3aadb59bdf83532588b772afdc1803ca36c1c117edfc2f1f3042dc",
     "next.config.framework.ts": "b03a93c15932b3cc29cb0844b0773d207a2198ad91f2669f4f3cf26da457d643",
     "postcss.config.mjs": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
     "scripts/check-framework-adr.mjs": "6ecb672363a5c3514171eaa7f1315d6a20f6fad9bf5469527bbf8759cddb9e62",

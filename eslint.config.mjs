@@ -30,10 +30,13 @@ const MODULE_BOUNDARY_MESSAGE =
   "next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
 /**
- * Files the lockfile records as registry items. Copy-assembled items may only
- * depend on the framework surface and other installed items, so transport,
- * i18n, router, toast and state libraries stay in the host adapter that renders
- * them (ADR-057, ADR-062).
+ * Files the lockfile records as feature-slice items. `registry:block` items are
+ * written to `src/features/**`; `registry:component` items keep living in
+ * `src/components/**` and stay under the host component rules, because they are
+ * host-coupled shells by design. Copy-assembled items may only depend on the
+ * framework surface and other installed items, so transport, i18n, router,
+ * toast and state libraries stay in the host adapter that renders them
+ * (ADR-057, ADR-062, ADR-065).
  */
 function installedModuleFiles() {
   let lockfile;
@@ -43,7 +46,9 @@ function installedModuleFiles() {
     if (error.code === "ENOENT") return [];
     throw error;
   }
-  return Object.values(lockfile.modules ?? {}).flatMap((module) => Object.keys(module.files ?? {}));
+  return Object.values(lockfile.modules ?? {})
+    .flatMap((module) => Object.keys(module.files ?? {}))
+    .filter((file) => file.startsWith(FEATURE_PREFIX));
 }
 
 function escapeRegExp(value) {

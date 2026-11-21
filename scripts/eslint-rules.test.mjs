@@ -113,17 +113,24 @@ test("R6 allows the radii its own message recommends", async () => {
   assert.ok(!errors(messages, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
 });
 
-test("R3/R6 also gate the framework runtime, while R7 stays host-only", async () => {
+test("R3/R6/R7 also gate the framework runtime", async () => {
   const tokens = await lintFixture({
     "src/framework/probe.tsx": 'export function Probe() { return <div className="bg-red-500 rounded-xl p-[3px]" />; }',
   });
   assert.ok(errors(tokens, "no-restricted-syntax").some((message) => message.text.includes("(R3)")));
   assert.ok(errors(tokens, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
 
+  // Framework copy is copied by hosts that cannot edit it, so it needs the
+  // same translatability gate as host copy.
   const copy = await lintFixture({
     "src/framework/labels.tsx": "export function Labels() { return <div>Close</div>; }",
   });
-  assert.deepEqual(errors(copy, "react/jsx-no-literals"), []);
+  assert.ok(errors(copy, "react/jsx-no-literals").length >= 1);
+
+  const punctuation = await lintFixture({
+    "src/framework/separator.tsx": "export function Separator() { return <div>—</div>; }",
+  });
+  assert.deepEqual(errors(punctuation, "react/jsx-no-literals"), []);
 });
 
 test("R2 rejects inline loading branches, Skeleton and Loader2", async () => {

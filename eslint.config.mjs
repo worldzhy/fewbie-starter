@@ -24,6 +24,9 @@ const PALETTE_CLASS =
 const OFF_SCALE_SPACING =
   /(?:^|[\s"'`])(?:rounded-(?:xl|2xl|3xl)|(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y|h|w|size|z)-\[)/;
 const LOADING_BRANCH = /(?:isLoading|loading|isPending|isFetching|isSubmitting|isSaving|isDeleting|isUpdating)$/;
+// Punctuation that carries no translation; shared by the host and framework
+// scopes so the two R7 rule sets cannot drift.
+const R7_ALLOWED_STRINGS = ["·", "—", "–", "/", ":"];
 
 const PALETTE_SYNTAX = [
   {
@@ -131,15 +134,16 @@ export const frameworkLintConfig = [
     ignores: ["src/components/ui/**"],
     rules: {
       // R7: display copy lives in the host i18n message files.
-      "react/jsx-no-literals": ["error", { allowedStrings: ["·", "—", "–", "/", ":"] }],
+      "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
     },
   },
   {
-    // R3/R6 for the framework runtime: these files are the reference host code
-    // copies, so they must pass the same token and scale gates.
+    // R3/R6/R7 for the framework runtime: these files are the reference host
+    // code copies, so they must pass the same token, scale and copy gates.
     files: FRAMEWORK_CODE,
     rules: {
       "no-restricted-syntax": ["error", ...PALETTE_SYNTAX, ...OFF_SCALE_SYNTAX],
+      "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
     },
   },
 ];

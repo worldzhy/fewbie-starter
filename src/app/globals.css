@@ -160,10 +160,13 @@ html {
   background: var(--background);
 }
 
+/* Base values, not forced ones: a host that brands the shell overrides them
+   in its own block below without needing a more specific selector or
+   `!important` of its own. */
 body {
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  font-family: var(--font-inter), Inter, system-ui, sans-serif !important;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
   line-height: 1.6;
   text-rendering: optimizeLegibility;
 }

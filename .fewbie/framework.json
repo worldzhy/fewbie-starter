@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "algorithm": "sha256",
+  "files": {
+    "components.json": "a7720c54d6a109d6063937fac1c7766c44a1020cdbe43eb489ca2cb126fbbaa9",
+    "eslint.config.mjs": "9ae05d50075c0ee571ef1647488490f4c79b535635f208bd5d9ad788ad48ccd1",
+    "next.config.framework.ts": "b03a93c15932b3cc29cb0844b0773d207a2198ad91f2669f4f3cf26da457d643",
+    "postcss.config.mjs": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+    "src/app/layout.tsx": "a39f447952c75824766dc6e0cbd0af5230489873913761565a1f93145a196cb1",
+    "src/components/ui/badge.tsx": "08b8b49ff8dc3714e1143f47ce7146e8feaa168847be83f6da7bfa00e4478abb",
+    "src/components/ui/button.tsx": "40fb68c8bacbc80b84b2214b6a03160b378f43b69d75b97d33e5be68743cf999",
+    "src/components/ui/card.tsx": "c3c51981da339563ffc5af38625e255efed4a7be3f7ebde8cf6b3d8b804d6831",
+    "src/components/ui/dialog.tsx": "9a22f015aa13820ff09ce4d2332e3507771e21c40adc116a74f4e9626e03dd70",
+    "src/components/ui/dropdown-menu.tsx": "28ebc19bd763be37402eb85fdc2a2e0c96f829136644f24ac59d8c2e808ab352",
+    "src/components/ui/input.tsx": "676ac5e67d5677550efdd4853030517e9a4a703a70c6cebae51fbb2cc1367d51",
+    "src/components/ui/label.tsx": "810b519276bbcabcc098693b797b523aaa693dfdeddfa2c2987ca38e1f9bcda8",
+    "src/components/ui/separator.tsx": "703d48f0e86396fc467ac8ec4635b7b8b0443e8bcbae47c4dcf07a2a35e993c9",
+    "src/components/ui/skeleton.tsx": "c3d15884060de58ef463864fd41fa5fe82d758eca77def55c34f4a8f5dbcb723",
+    "src/components/ui/sonner.tsx": "d952ce0a3ec7e8262865269f1cbc11d65996213ed1e532a05253651105006693",
+    "src/components/ui/table.tsx": "614ed537fde63987d56d78e1c720d78694e43a3dc46be18bad8c432883fb7340",
+    "src/components/ui/tabs.tsx": "7402061e8a49f5d690c0efdc788cd729368a49dd801d9cf570b03f049f7a1a96",
+    "src/components/ui/textarea.tsx": "95fc84ff241886ef1d678d13e6a86e232dfbf861bff88d9462254403d6c2077d",
+    "src/i18n/config.ts": "048484e90f5621cab880c3bcea93e047fd635192ae2f3cb56a8d0ed3309850c9",
+    "src/instrumentation.ts": "d87c6428cd8a6335b0ddd1bfb9ff302af543c18fe370aab799d7b94f47bb8134",
+    "src/lib/utils.ts": "55bbdc94cef3e0c8a8bba386e94f97228dd2c967fe61466fc565378890550c08",
+    "tsconfig.json": "532eef4bfe94f0282cbf8aa1e30a292a8cacc7732ce81cfbd08911fbfc21df59"
+  }
+}

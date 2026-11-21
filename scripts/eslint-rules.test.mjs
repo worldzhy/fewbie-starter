@@ -90,6 +90,27 @@ test("R6 rejects off-scale radius and arbitrary spacing", async () => {
   assert.ok(errors(messages, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
 });
 
+test("R6 allows the radii its own message recommends", async () => {
+  const messages = await lintFixture({
+    "src/app/page.tsx":
+      'export function Page() { return <div className="rounded-none rounded-sm rounded-md rounded-lg rounded-full" />; }',
+  });
+  assert.ok(!errors(messages, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
+});
+
+test("R3/R6 also gate the framework runtime, while R7 stays host-only", async () => {
+  const tokens = await lintFixture({
+    "src/framework/probe.tsx": 'export function Probe() { return <div className="bg-red-500 rounded-xl p-[3px]" />; }',
+  });
+  assert.ok(errors(tokens, "no-restricted-syntax").some((message) => message.text.includes("(R3)")));
+  assert.ok(errors(tokens, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
+
+  const copy = await lintFixture({
+    "src/framework/labels.tsx": "export function Labels() { return <div>Close</div>; }",
+  });
+  assert.deepEqual(errors(copy, "react/jsx-no-literals"), []);
+});
+
 test("R2 rejects inline loading branches, Skeleton and Loader2", async () => {
   const branch = await lintFixture({
     "src/app/page.tsx":

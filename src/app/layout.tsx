@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale, setRequestLocale } from "next-intl/server";
 import { cookies } from "next/headers";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { normalizeTheme, THEME_COOKIE, type ThemePreference } from "@/framework/theme/theme";
 import { type Locale } from "@/i18n/config";
 import { HostProviders } from "./host-providers";
@@ -58,7 +59,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           />
         ) : null}
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <HostProviders>{children}</HostProviders>
+          <TooltipProvider>
+            <HostProviders>{children}</HostProviders>
+          </TooltipProvider>
           <Toaster position="top-right" duration={2000} />
         </NextIntlClientProvider>
       </body>

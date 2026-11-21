@@ -169,7 +169,9 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
             <AlertDialogAction
               onClick={handleConfirm}
               disabled={isConfirmDisabled}
-              className={cn(options.destructive && "bg-destructive text-white hover:bg-destructive/90")}
+              className={cn(
+                options.destructive && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+              )}
             >
               {confirmationText}
             </AlertDialogAction>

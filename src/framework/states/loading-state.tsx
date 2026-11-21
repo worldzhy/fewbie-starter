@@ -20,14 +20,14 @@ export function LoadingState({ label, variant = "block", className }: LoadingSta
     <div
       className={cn(
         "flex items-center justify-center",
-        variant === "overlay" ? "fixed inset-0 z-[9999] bg-background/60" : "h-full min-h-40 w-full",
+        variant === "overlay" ? "fixed inset-0 z-50 bg-background/60" : "h-full min-h-40 w-full",
         className,
       )}
       role="status"
       aria-live="polite"
     >
-      <div className="flex h-[200px] w-[200px] flex-col items-center justify-center rounded-lg border border-border bg-card">
-        <Loader2 className="size-[70px] animate-spin text-primary" />
+      <div className="flex size-50 flex-col items-center justify-center rounded-lg border border-border bg-card">
+        <Loader2 className="size-17.5 animate-spin text-primary" />
         {label ? <div className="mt-8 text-sm text-muted-foreground">{label}</div> : null}
       </div>
     </div>

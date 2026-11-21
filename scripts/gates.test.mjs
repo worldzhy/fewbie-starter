@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -131,4 +131,28 @@ test("R12 requires an ADR next to a framework change", () => {
     checkFrameworkAdr(["src/framework/page/page-shell.tsx", ".trae/documents/decisions/ADR-999-test.md"]),
     [],
   );
+});
+
+// Review R1-02/R1-03: framework shell chrome renders tooltips, so the root
+// layout must mount the provider once, and the primitive must only use tokens
+// the framework theme actually defines.
+const repoRoot = new URL("..", import.meta.url);
+
+test("the root layout mounts TooltipProvider around the subtree", async () => {
+  const layout = await readFile(new URL("src/app/layout.tsx", repoRoot), "utf8");
+  assert.match(
+    layout,
+    /<TooltipProvider>[\s\S]*<HostProviders>\{children\}<\/HostProviders>[\s\S]*<\/TooltipProvider>/,
+  );
+});
+
+test("the tooltip primitive uses popover tokens the theme defines", async () => {
+  const tooltip = await readFile(new URL("src/components/ui/tooltip.tsx", repoRoot), "utf8");
+  const css = await readFile(new URL("src/app/globals.css", repoRoot), "utf8");
+  for (const token of ["bg-popover", "text-popover-foreground", "fill-popover"]) {
+    assert.ok(tooltip.includes(token), `tooltip.tsx must use ${token}`);
+  }
+  assert.ok(!/\b(?:bg|text|fill)-night-/.test(tooltip), "tooltip.tsx must not reference undefined night-* tokens");
+  assert.match(css, /--color-popover:\s*var\(--popover\)/);
+  assert.match(css, /--color-popover-foreground:\s*var\(--popover-foreground\)/);
 });

@@ -23,12 +23,7 @@ export function ErrorState({
   className?: string;
 }) {
   return (
-    <Alert
-      className={cn(
-        "border-red-200 bg-red-50 text-red-700 dark:border-red-500/40 dark:bg-red-500/15 dark:text-red-400",
-        className,
-      )}
-    >
+    <Alert className={cn("border-destructive/30 bg-destructive/10 text-destructive", className)}>
       <AlertCircle className="size-4 shrink-0" />
       <div className="min-w-0 space-y-0.5">
         <AlertTitle>{title}</AlertTitle>

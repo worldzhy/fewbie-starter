@@ -18,17 +18,15 @@ export type InlineResultState = {
 const TONE_META: Record<InlineResultTone, { Icon: typeof Info; className: string }> = {
   success: {
     Icon: CheckCircle2,
-    className:
-      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-400",
+    className: "border-success/30 bg-success/10 text-success",
   },
   error: {
     Icon: AlertCircle,
-    className: "border-red-200 bg-red-50 text-red-700 dark:border-red-500/40 dark:bg-red-500/15 dark:text-red-400",
+    className: "border-destructive/30 bg-destructive/10 text-destructive",
   },
   info: {
     Icon: Info,
-    className:
-      "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300",
+    className: "border-primary/30 bg-primary/10 text-primary",
   },
 };
 

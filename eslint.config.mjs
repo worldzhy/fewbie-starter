@@ -19,12 +19,13 @@ import next from "@devbie/style-guide/eslint/next";
 const HOST_CODE = ["src/app/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"];
 const FRAMEWORK_CODE = ["src/framework/**/*.{ts,tsx}"];
 // Registry modules are copy-assembled by `fewbie modules add`: they may only
-// depend on React and the shadcn primitives, so transport, i18n, router, toast
-// and state libraries stay in the host adapter that renders them (ADR-057).
+// depend on React, the shadcn primitives and sibling registry items they
+// declare in registryDependencies, so transport, i18n, router, toast and state
+// libraries stay in the host adapter that renders them (ADR-057, ADR-062).
 const MODULE_CODE = ["src/modules/**/*.{ts,tsx}"];
 const MODULE_BOUNDARY_MESSAGE =
-  "A registry module may import React, @/components/ui/*, @/lib/utils and its own files only; " +
-  "host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
+  "A registry module may import React, @/components/ui/*, @/lib/utils, its own files and the sibling items it declares " +
+  "in registryDependencies; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
 const COLOR_UTILITY = "bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow|decoration|caret|accent";
 const PALETTE_CLASS =
@@ -206,7 +207,7 @@ export const frameworkLintConfig = [
               message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
             },
             {
-              group: ["@/app/*", "@/features/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*", "@/modules/*"],
+              group: ["@/app/*", "@/features/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*"],
               message: MODULE_BOUNDARY_MESSAGE,
             },
             { group: ["@/components/*", "!@/components/ui"], message: MODULE_BOUNDARY_MESSAGE },

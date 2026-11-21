@@ -196,6 +196,47 @@ test("R11 rejects an inline query-key literal", async () => {
   assert.ok(errors(template, "no-restricted-syntax").some((message) => message.text.includes("(R11)")));
 });
 
+test("registry modules may only reach the framework surface", async () => {
+  const allowed = await lintFixture({
+    "src/modules/login-page/login-page.tsx": `
+      import { Button } from "@/components/ui/button";
+      import { cn } from "@/lib/utils";
+      export function LoginPage({ label }: { label: string }) {
+        return <Button className={cn("w-full")}>{label}</Button>;
+      }
+    `,
+  });
+  assert.deepEqual(errors(allowed, "no-restricted-imports"), []);
+  assert.deepEqual(errors(allowed, "no-restricted-syntax"), []);
+
+  for (const source of [
+    "next/navigation",
+    "next-intl",
+    "axios",
+    "@tanstack/react-query",
+    "sonner",
+    "@/i18n/request",
+    "@/features/user/api",
+  ]) {
+    const messages = await lintFixture({
+      "src/modules/login-page/login-page.tsx": `import { helper } from "${source}";\nexport const value = helper;`,
+    });
+    assert.ok(errors(messages, "no-restricted-imports").length >= 1, `${source} must be rejected inside src/modules`);
+  }
+});
+
+test("registry modules cannot fetch on their own", async () => {
+  const globalFetch = await lintFixture({
+    "src/modules/login-page/login-page.tsx": 'export const load = () => fetch("/api/session");',
+  });
+  assert.ok(errors(globalFetch, "no-restricted-globals").length >= 1);
+
+  const memberFetch = await lintFixture({
+    "src/modules/login-page/login-page.tsx": 'export const load = () => window.fetch("/api/session");',
+  });
+  assert.ok(errors(memberFetch, "no-restricted-syntax").length >= 1);
+});
+
 test("framework-owned primitives stay outside the host gates", async () => {
   const messages = await lintFixture({
     "src/components/ui/legacy.tsx":

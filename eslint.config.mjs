@@ -18,6 +18,13 @@ import next from "@devbie/style-guide/eslint/next";
  */
 const HOST_CODE = ["src/app/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"];
 const FRAMEWORK_CODE = ["src/framework/**/*.{ts,tsx}"];
+// Registry modules are copy-assembled by `fewbie modules add`: they may only
+// depend on React and the shadcn primitives, so transport, i18n, router, toast
+// and state libraries stay in the host adapter that renders them (ADR-057).
+const MODULE_CODE = ["src/modules/**/*.{ts,tsx}"];
+const MODULE_BOUNDARY_MESSAGE =
+  "A registry module may import React, @/components/ui/*, @/lib/utils and its own files only; " +
+  "host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
 const PALETTE_CLASS =
   /\b(?:bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)\b|\b(?:bg|text|border|ring|fill|stroke)-(?:black|white)\b/;
@@ -160,6 +167,49 @@ export const frameworkLintConfig = [
     rules: {
       "no-restricted-syntax": ["error", ...PALETTE_SYNTAX, ...STYLE_COLOR_SYNTAX, ...OFF_SCALE_SYNTAX],
       "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
+    },
+  },
+  {
+    // Module boundary (ADR-057): a registry item is copied into the host as-is,
+    // so it must compile against the framework surface alone.
+    files: MODULE_CODE,
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+        { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+      ],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["next", "next/*", "next-intl", "next-intl/*"],
+              message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
+            },
+            {
+              group: ["axios", "@tanstack/*", "swr", "sonner", "@radix-ui/*"],
+              message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
+            },
+            {
+              group: ["@/app/*", "@/features/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*", "@/modules/*"],
+              message: MODULE_BOUNDARY_MESSAGE,
+            },
+            { group: ["@/lib/*", "!@/lib/utils"], message: MODULE_BOUNDARY_MESSAGE },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
+          message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
+        },
+        {
+          selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr|@tanstack\\/.*)$/]",
+          message: MODULE_BOUNDARY_MESSAGE,
+        },
+      ],
     },
   },
 ];

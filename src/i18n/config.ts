@@ -33,9 +33,15 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = cookieLocale;
   }
 
+  // Host copy and framework copy are separate files so `template update` can
+  // own the framework namespace without touching host messages. The framework
+  // namespace wins on a collision (ADR-056 D8).
+  const hostMessages = (await import(`./messages/${locale}.json`)).default;
+  const frameworkMessages = (await import(`./messages/framework.${locale}.json`)).default;
+
   return {
     locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
+    messages: { ...hostMessages, framework: frameworkMessages },
   };
 });
 

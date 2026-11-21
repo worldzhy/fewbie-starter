@@ -28,11 +28,11 @@
 | R1-19 | fewbie-starter                       | 框架组件硬编码英文（Close / Command Palette），R7 不覆盖框架文件                                            | P2       | template | 非英文宿主用户                                                     | fixed | `16bdf01`                             | `scripts/eslint-rules.test.mjs`（R7 also gates the framework runtime）                         |
 | R1-20 | fewbie-starter                       | `InputGroupAddon` 的 `onClick` 被调用方覆盖；`Table` 无谓 `"use client"`                                    | P2       | template | 使用两者的宿主                                                     | fixed | `07e74c1`                             | —（无渲染测试底座，static 复核）                                                               |
 | R1-21 | fewbie-starter                       | `globals.css` 对 body 的 background/color/font-family 使用 `!important`                                     | P2       | template | 需要品牌定制的宿主                                                 | fixed | `16bdf01`                             | 无（视觉回归）                                                                                 |
-| R1-22 | fewbie-starter                       | R12 路径清单缺 `src/i18n/request.ts`、`.fewbie/framework.json`、`globals.css`；且只在 PR 触发               | P2       | template | 直接 push 到 dev 的维护者                                          | open  | —                                     | 路径已补夹具（`96b1e85`）；CI 触发未改                                                         |
+| R1-22 | fewbie-starter                       | R12 路径清单缺 `src/i18n/request.ts`、`.fewbie/framework.json`、`globals.css`；且只在 PR 触发               | P2       | template | 直接 push 到 dev 的维护者                                          | fixed | `96b1e85` + `49d8219`                 | 路径夹具（`96b1e85`）；`ci.yml` 新增 push:dev 的 guards job（结构 + ADR，无 build/镜像）       |
 | R1-23 | fewbie-starter                       | `NavigationProgressProvider` 卸载时未清 30s 定时器                                                          | P2       | template | 路由切换后卸载的场景                                               | fixed | `07e74c1`                             | —（无渲染测试底座，static 复核）                                                               |
 | R1-24 | fewbie-starter                       | R1 页面契约可被注释中的 `PageShell` 字样绕过；`src/features` 页面不扫描                                     | P2       | template | 任意宿主页面作者                                                   | fixed | `2d1d3f0`                             | `scripts/gates.test.mjs`（R1 only counts PageShell when the code uses it）                     |
 | R1-25 | fewbie-starter                       | 折叠态导航 `<Link>` 无 `aria-label`，可访问名为空                                                           | P2       | template | 读屏用户                                                           | fixed | `07e74c1`                             | —（无渲染测试底座，static 复核）                                                               |
-| R1-26 | fewbie-starter                       | `.fewbie/framework.json` 基线可被宿主自行改写，D3 冲突检测在该路径失效                                      | P2       | template | 宿主维护者                                                         | open  | —                                     | 待补：基线完整性校验                                                                           |
+| R1-26 | fewbie-starter                       | `.fewbie/framework.json` 基线可被宿主自行改写，D3 冲突检测在该路径失效                                      | P2       | template | 宿主维护者                                                         | fixed | devbie `7b5aff59` / starter `49d8219` | devbie `test/template-ownership.test.ts`（digest 篡改拒绝、pre-digest 兼容）；ADR-002          |
 
 ## 备注
 
@@ -41,7 +41,7 @@
 - 修复提交请在完成后回填「修复 commit」与「回归测试指针」，状态改 `fixed`，回归通过后改 `verified`。
 - 2026-11-21 修复轮：评审与修复同会话（用户即席要求），报告保持冻结于 `bb42e89`，未改写结论；本轮的缓解是每条修复均以夹具或命令复现。
 - R1-15 两半均已完成：R2 变量名扩展（`96b1e85`），`style` 内颜色检测（`3f5e387`，`JSXAttribute[name.name="style"]` 下的 color/background/borderColor/fill/stroke，`var(--*)` 放行）。
-- R1-22 路径清单已补（`globals.css` / `i18n/request.ts` / `.fewbie/framework.json`），CI 仍只在 PR 触发，直推 dev 不受门禁保护，未改触发器（见 backlog）。
-- R1-26 未处理：需要基线完整性机制（签名或与 registry 交叉校验），单独设计（见 backlog 的设计约束）。
+- R1-22 两半均已完成：路径清单（`96b1e85`），直推 dev 的触发器（`49d8219`，`guards` job 只跑结构 + ADR 门禁，避免给 dev 每次 push 套上 build 和镜像成本）。
+- R1-26 已落地：清单 `digest` 自校验（devbie `7b5aff59`），决策与局限记录在 `.trae/documents/decisions/ADR-002-framework-baseline-digest.md`（状态：提议中）。
 - R1-12 的决策记录在 `.trae/documents/decisions/ADR-001-framework-root-providers.md`（状态：已采纳，2026-11-21 用户拍板）。
 - 本机 `npm run check:template` 为红：本地安装 `@devbie/fewbie-cli` 1.6.2 缺少 M2 注册表条目，devbie 源为 1.6.3，属发布滞后而非本轮改动引入；验证统一用源 CLI（`✓ Framework baseline covers 80 file(s)`）。

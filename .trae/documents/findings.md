@@ -45,3 +45,23 @@
 - R1-26 已落地：清单 `digest` 自校验（devbie `7b5aff59`），决策与局限记录在 `.trae/documents/decisions/ADR-002-framework-baseline-digest.md`（状态：提议中）。
 - R1-12 的决策记录在 `.trae/documents/decisions/ADR-001-framework-root-providers.md`（状态：已采纳，2026-11-21 用户拍板）。
 - 本机 `npm run check:template` 为红：本地安装 `@devbie/fewbie-cli` 1.6.2 缺少 M2 注册表条目，devbie 源为 1.6.3，属发布滞后而非本轮改动引入；验证统一用源 CLI（`✓ Framework baseline covers 80 file(s)`）。
+
+## Round 2（2026-11-21，前端组件复用体系，HEAD `269641e` / host `659b805` / CLI `7b5aff59`）
+
+| ID    | 仓                      | 标题                                                              | severity | 暴露面   | 可达性                                | 状态 | 修复 commit | 回归测试指针                                                                          |
+| ----- | ----------------------- | ----------------------------------------------------------------- | -------- | -------- | ------------------------------------- | ---- | ----------- | ------------------------------------------------------------------------------------- |
+| R2-01 | fewbie-starter + host   | framework 层在真实宿主零采用，模板修复无法到达宿主                | P1       | template | 宿主维护者 / 页面作者                 | open | —           | 待补：宿主 `@/framework` import 计数与渲染烟测                                        |
+| R2-02 | devbie + fewbie-starter | 新所有权下存量宿主首次 update 覆盖 layout / i18n / ui，且无阻断   | P1       | source   | 按 AGENTS.md 执行 update 的宿主维护者 | open | —           | `packages/fewbie-cli/test/template-ownership.test.ts`（待补 pre-manifest 两阶段用例） |
+| R2-03 | fewbie-starter + devbie | manifest 未发布到 dev/main，基线保护在文档化流程中不可达          | P1       | template | 所有宿主与 CI                         | open | —           | 待补：`--template-ref` 无 manifest 时的行为断言                                       |
+| R2-04 | fewbie-starter          | palette 门禁迁移即红（186 字面量 / 54 文件），无 warn/staged 路径 | P2       | template | 迁移中的宿主                          | open | —           | `scripts/eslint-rules.test.mjs`（规则有效性已有；缺迁移期配置）                       |
+| R2-05 | nightwatch-frontend     | 8 个 ui primitive 分叉方向混杂，覆盖会丢宿主主题定制              | P2       | host     | 宿主维护者                            | open | —           | 待补：template↔host primitive 差异白名单                                              |
+| R2-06 | fewbie-starter + host   | AGENTS.md 的 framework-synced 清单未包含新所有权路径              | P2       | template | 两仓 agent                            | open | —           | 待补：文档清单与 `TEMPLATE_ASSETS` 一致性断言                                         |
+| R2-07 | nightwatch-frontend     | chart shadow 已实质漂移（硬编码 6 色 vs token 解析）              | P2       | host     | 图表页面作者                          | open | —           | 待补：宿主 chart 改用 framework 后的快照                                              |
+| R2-08 | fewbie-starter          | framework 22 文件仅 1 个单测文件，page/shell/feedback 无行为测试  | P2       | template | 框架维护者                            | open | —           | 待补：渲染测试底座                                                                    |
+
+### Round 2 备注
+
+- 本轮只读：报告冻结于 `269641e` / `659b805` / `7b5aff59`，未创建修复 commit。
+- 0 P0；3 条 P1 均经独立反驳轮与主会话读码裁决，被推翻的 4 条初判表述见报告 §7。
+- `crewbie-console-frontend` 同样零采用，但不在 workspace scope 内，仅作旁证，不计入台账。
+- 发布顺序约束：先让模板 `dev` / `main` 携带 `.fewbie/framework.json`，再发布包含 `63c8dd22` 的 CLI；否则 R2-02 / R2-03 同时生效。

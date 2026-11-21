@@ -1,7 +1,8 @@
 # ADR-001：框架级 Provider 由框架根布局挂载
 
-- 状态：提议中
+- 状态：已采纳
 - 日期：2026-11-21
+- 更新：2026-11-21 — 随 R1-12 修复落地（`6d0a75f`）；后续变更另起 ADR
 - 仓：fewbie-starter
 - 关系：落实 devbie ADR-056 D5（`src/app/layout.tsx` 归框架所有）与 devbie ADR-035（scaffold 引入 `host-providers.tsx`）
 

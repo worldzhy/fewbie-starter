@@ -43,5 +43,5 @@
 - R1-15 两半均已完成：R2 变量名扩展（`96b1e85`），`style` 内颜色检测（`3f5e387`，`JSXAttribute[name.name="style"]` 下的 color/background/borderColor/fill/stroke，`var(--*)` 放行）。
 - R1-22 路径清单已补（`globals.css` / `i18n/request.ts` / `.fewbie/framework.json`），CI 仍只在 PR 触发，直推 dev 不受门禁保护，未改触发器（见 backlog）。
 - R1-26 未处理：需要基线完整性机制（签名或与 registry 交叉校验），单独设计（见 backlog 的设计约束）。
-- R1-12 的决策记录在 `.trae/documents/decisions/ADR-001-framework-root-providers.md`（状态：提议中，待拍板后转已采纳）。
+- R1-12 的决策记录在 `.trae/documents/decisions/ADR-001-framework-root-providers.md`（状态：已采纳，2026-11-21 用户拍板）。
 - 本机 `npm run check:template` 为红：本地安装 `@devbie/fewbie-cli` 1.6.2 缺少 M2 注册表条目，devbie 源为 1.6.3，属发布滞后而非本轮改动引入；验证统一用源 CLI（`✓ Framework baseline covers 80 file(s)`）。

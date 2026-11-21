@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isAuthPath, isEnvelope, isTrustedApiTarget } from "./protocol";
+import { isAuthPath, isEnvelope, isTrustedApiTarget } from "../../lib/api-client/protocol";
 
 test("isEnvelope accepts only the newbie envelope shape", () => {
   assert.equal(isEnvelope({ code: 0, data: null }), true);

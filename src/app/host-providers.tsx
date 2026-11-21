@@ -3,9 +3,13 @@
  *
  * `src/app/layout.tsx` is framework-owned (ADR-056 D5) and wraps the tree in
  * this component. A host adds its own providers and widgets here — query
- * client, theme provider, API error toast, monitoring — instead of rewriting
- * the layout. This file is a scaffold asset (ADR-035): `template update` creates
- * it when missing and never rewrites an adopted copy.
+ * client, API error toast, monitoring — instead of rewriting the layout.
+ * This file is a scaffold asset (ADR-035): `template update` creates it when
+ * missing and never rewrites an adopted copy.
+ *
+ * Already mounted by the layout, so add only what your host needs:
+ * ThemeProvider (`useThemePreference`), ConfirmProvider (`useConfirm`),
+ * NavigationProgressProvider (`useRouteNavigate`) and TooltipProvider.
  */
 export function HostProviders({ children }: { children: React.ReactNode }) {
   return <>{children}</>;

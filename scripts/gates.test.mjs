@@ -164,6 +164,17 @@ test("the root layout mounts TooltipProvider around the subtree", async () => {
   );
 });
 
+// Review R1-12: the hooks these providers expose throw without a mount, so the
+// framework layout mounts them instead of leaving an implicit contract for the
+// host to remember.
+test("the root layout mounts the framework providers", async () => {
+  const layout = await readFile(new URL("src/app/layout.tsx", repoRoot), "utf8");
+  for (const provider of ["ThemeProvider", "ConfirmProvider", "NavigationProgressProvider"]) {
+    assert.match(layout, new RegExp(`<${provider}[\\s>]`), `${provider} must be mounted in the root layout`);
+  }
+  assert.match(layout, /<ThemeProvider initialTheme=\{theme\}>/);
+});
+
 test("the tooltip primitive uses popover tokens the theme defines", async () => {
   const tooltip = await readFile(new URL("src/components/ui/tooltip.tsx", repoRoot), "utf8");
   const css = await readFile(new URL("src/app/globals.css", repoRoot), "utf8");

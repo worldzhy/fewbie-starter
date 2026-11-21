@@ -5,6 +5,9 @@ import { getMessages, getLocale, setRequestLocale } from "next-intl/server";
 import { cookies } from "next/headers";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConfirmProvider } from "@/framework/feedback/confirm-dialog";
+import { NavigationProgressProvider } from "@/framework/feedback/navigation-progress";
+import { ThemeProvider } from "@/framework/theme/theme-provider";
 import { normalizeTheme, THEME_COOKIE, type ThemePreference } from "@/framework/theme/theme";
 import { type Locale } from "@/i18n/config";
 import { HostProviders } from "./host-providers";
@@ -58,10 +61,18 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             }}
           />
         ) : null}
+        {/* Framework providers mount here so the hooks they expose work in
+            every host without the host remembering to wire them (ADR-001). */}
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <TooltipProvider>
-            <HostProviders>{children}</HostProviders>
-          </TooltipProvider>
+          <ThemeProvider initialTheme={theme}>
+            <ConfirmProvider>
+              <NavigationProgressProvider>
+                <TooltipProvider>
+                  <HostProviders>{children}</HostProviders>
+                </TooltipProvider>
+              </NavigationProgressProvider>
+            </ConfirmProvider>
+          </ThemeProvider>
           <Toaster position="top-right" duration={2000} />
         </NextIntlClientProvider>
       </body>

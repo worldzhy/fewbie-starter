@@ -12,6 +12,11 @@
     "success": "Success",
     "error": "Error",
     "warning": "Warning",
-    "done": "Done"
+    "done": "Done",
+    "selectDate": "Select date",
+    "selectDateTime": "Select date and time",
+    "clear": "Clear",
+    "hour": "Hour",
+    "minute": "Minute"
   }
 }

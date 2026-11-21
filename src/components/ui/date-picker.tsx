@@ -119,7 +119,7 @@ function DatePickerBase({
   className,
   withTime = false,
 }: DatePickerProps & { withTime?: boolean }) {
-  const tc = useTranslations("common");
+  const tc = useTranslations("framework.common");
   const format = useFormatter();
   const calendarLocale = useCalendarLocale();
   const [open, setOpen] = React.useState(false);

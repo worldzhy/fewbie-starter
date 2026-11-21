@@ -131,6 +131,11 @@ test("R12 requires an ADR next to a framework change", () => {
     checkFrameworkAdr(["src/framework/page/page-shell.tsx", ".trae/documents/decisions/ADR-999-test.md"]),
     [],
   );
+  // The theme tokens, the locale request config and the baseline manifest are
+  // cross-host contracts too: editing them needs a design decision.
+  for (const file of ["src/i18n/request.ts", "src/app/globals.css", ".fewbie/framework.json"]) {
+    assert.equal(checkFrameworkAdr([file]).length, 1, `${file} must be a framework contract path`);
+  }
 });
 
 // Review R1-02/R1-03: framework shell chrome renders tooltips, so the root

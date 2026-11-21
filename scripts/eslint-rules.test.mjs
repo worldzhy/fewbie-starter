@@ -70,6 +70,16 @@ test("R4 rejects global fetch and a bare axios import", async () => {
   });
   assert.ok(errors(fetched, "no-restricted-globals").length >= 1);
 
+  const memberFetch = await lintFixture({
+    "src/features/user/api.ts": 'export const load = () => window.fetch("/api/users");',
+  });
+  assert.ok(errors(memberFetch, "no-restricted-syntax").some((message) => message.text.includes("(R4)")));
+
+  const dynamicAxios = await lintFixture({
+    "src/features/user/api.ts": 'export const load = () => import("axios");',
+  });
+  assert.ok(errors(dynamicAxios, "no-restricted-syntax").some((message) => message.text.includes("(R4)")));
+
   const axiosImport = await lintFixture({
     "src/features/user/api.ts": 'import axios from "axios";\nexport const client = axios;',
   });
@@ -88,6 +98,11 @@ test("R6 rejects off-scale radius and arbitrary spacing", async () => {
     "src/app/page.tsx": 'export function Page() { return <div className="rounded-xl p-[13px]" />; }',
   });
   assert.ok(errors(messages, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
+
+  const sizing = await lintFixture({
+    "src/app/page.tsx": 'export function Page() { return <div className="h-[200px] size-[70px] z-[9999]" />; }',
+  });
+  assert.ok(errors(sizing, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
 });
 
 test("R6 allows the radii its own message recommends", async () => {
@@ -118,6 +133,12 @@ test("R2 rejects inline loading branches, Skeleton and Loader2", async () => {
   });
   assert.ok(errors(branch, "no-restricted-syntax").some((message) => message.text.includes("(R2)")));
 
+  const submitBranch = await lintFixture({
+    "src/app/page.tsx":
+      "export function Page({ isSubmitting }: { isSubmitting: boolean }) { return isSubmitting ? <div /> : <span />; }",
+  });
+  assert.ok(errors(submitBranch, "no-restricted-syntax").some((message) => message.text.includes("(R2)")));
+
   const skeleton = await lintFixture({
     "src/app/page.tsx":
       'import { Skeleton } from "@/components/ui/skeleton";\nexport function Page() { return <Skeleton />; }',
@@ -143,6 +164,12 @@ test("R11 rejects an inline query-key literal", async () => {
       'export function useUsers(queryFn: () => void) { return useQuery({ queryKey: ["users"], queryFn }); }',
   });
   assert.ok(errors(messages, "no-restricted-syntax").some((message) => message.text.includes("(R11)")));
+
+  const template = await lintFixture({
+    "src/features/user/list.ts":
+      "export function useUsers(id: string, queryFn: () => void) { return useQuery({ queryKey: [`users-${id}`], queryFn }); }",
+  });
+  assert.ok(errors(template, "no-restricted-syntax").some((message) => message.text.includes("(R11)")));
 });
 
 test("framework-owned primitives stay outside the host gates", async () => {

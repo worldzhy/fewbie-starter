@@ -22,8 +22,8 @@ const FRAMEWORK_CODE = ["src/framework/**/*.{ts,tsx}"];
 const PALETTE_CLASS =
   /\b(?:bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)\b|\b(?:bg|text|border|ring|fill|stroke)-(?:black|white)\b/;
 const OFF_SCALE_SPACING =
-  /(?:^|[\s"'`])(?:rounded-(?:xl|2xl|3xl)|(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y)-\[)/;
-const LOADING_BRANCH = /(?:isLoading|loading|isPending|isFetching)$/;
+  /(?:^|[\s"'`])(?:rounded-(?:xl|2xl|3xl)|(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y|h|w|size|z)-\[)/;
+const LOADING_BRANCH = /(?:isLoading|loading|isPending|isFetching|isSubmitting|isSaving|isDeleting|isUpdating)$/;
 
 const PALETTE_SYNTAX = [
   {
@@ -100,10 +100,28 @@ export const frameworkLintConfig = [
           selector: 'JSXOpeningElement[name.name="Loader2"]',
           message: "Use LoadingState from @/framework/states instead of a page-local spinner (R2).",
         },
+        // R4: one HTTP client. The global ban misses member calls and the import
+        // ban misses a dynamic import.
+        {
+          selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
+          message: "Call the generated @/api client (or lib/api-client) instead of fetch (R4).",
+        },
+        {
+          selector: 'ImportExpression[source.value="axios"]',
+          message: "Import the shared client from @/lib/api-client instead of axios (R4).",
+        },
         // R11: query keys are domain constants, not inline literals.
         {
           selector: 'Property[key.name="queryKey"] > ArrayExpression > Literal:first-child',
           message: "Export a domain query-key constant instead of an inline string literal (R11).",
+        },
+        {
+          selector: 'Property[key.name="queryKey"] > Literal',
+          message: "Export a domain query-key constant instead of an inline string literal (R11).",
+        },
+        {
+          selector: 'Property[key.name="queryKey"] TemplateLiteral',
+          message: "Export a domain query-key constant instead of an inline template literal (R11).",
         },
       ],
     },

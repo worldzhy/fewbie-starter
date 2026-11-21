@@ -84,7 +84,7 @@ export function NavigationProgressProvider({ children }: { children: React.React
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none fixed inset-x-0 top-0 z-[100] h-0.5 bg-primary/25 transition-opacity duration-200",
+          "pointer-events-none fixed inset-x-0 top-0 z-100 h-0.5 bg-primary/25 transition-opacity duration-200",
           visible ? "opacity-100" : "opacity-0",
         )}
       >

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "5f502853f3841a96bc2cb657f67f965a998709b1c87bcabbd900ec333f5393f1",
+  "digest": "73b29d65ef9aa46c705450824d472fa196f252796ada948082ceb63f2aeb867b",
   "files": {
     "components.json": "a7720c54d6a109d6063937fac1c7766c44a1020cdbe43eb489ca2cb126fbbaa9",
     "eslint.config.mjs": "cf68639dadf247e3ebd3d094aa9a2629f99b186585fc0ce6501df3b6d99ad332",
@@ -15,8 +15,8 @@
     "scripts/eslint-rules.test.mjs": "daa99c54bdf4f3aacfe80b761cda683cdc1b54d0202bdd39931c602cb641827b",
     "scripts/gates.test.mjs": "1d2952289d6b3990a4208c79b40f3689d33b2f4a21a4a869b32a3ef337724407",
     "scripts/lib/walk.mjs": "5410ace36a4f81af89916f1d99e543dfd3c0ca1b470dcea5279fabb2397bebd3",
-    "src/app/fonts/geist-mono-latin.woff2": "e4c04ed778fdd86b37b77a422d1fd4c383a9de1bed77402846c21effefc81fcc",
-    "src/app/fonts/inter-latin.woff2": "b7c3a1d16c1a69ae8c486f816507ad519dbc43d5a34d04d986aef44d308eb32f",
+    "src/app/fonts/geist-mono-latin.woff2": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b",
+    "src/app/fonts/inter-latin.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
     "src/app/layout.tsx": "0798139ee5755d8e66026c4d98475611932f84f2849042ccb1f607d84e36f16e",
     "src/components/ui/accordion.tsx": "51a2140e471a65804cfa1cc6d12e4860dfaf58bd3c6eb1185011ba6838cbaf94",
     "src/components/ui/alert-dialog.tsx": "800ebc82db535149c5758906bfba4efdd5bda03552b2158fb70811e00d4d5dcd",

@@ -17,16 +17,26 @@ export type Locale = (typeof routing.locales)[number];
 const LOCALE_COOKIE = "NEXT_LOCALE";
 
 /**
- * Framework namespace of one locale. A host adopted before the framework
- * message files existed has no `framework.<locale>.json` yet, so the import is
- * optional: `template update` creates the file on its next run, and until then
- * the namespace is simply empty instead of failing the build.
+ * Framework namespace of one locale.
+ *
+ * The import used to fall back to `{}` on any failure, so a host that upgraded
+ * without the framework message files emitted a green build and then threw
+ * `MISSING_MESSAGE` the first time a framework component opened (R82-16). A
+ * missing file is now a build error with the fix in the message.
  */
 async function loadFrameworkMessages(locale: Locale): Promise<Record<string, unknown>> {
   try {
     return (await import(`./messages/framework.${locale}.json`)).default;
-  } catch {
-    return {};
+  } catch (error) {
+    const code = (error as { code?: string } | null)?.code;
+    if (code === "MODULE_NOT_FOUND" || code === "ERR_MODULE_NOT_FOUND") {
+      throw new Error(
+        `Missing framework messages for locale '${locale}'. ` +
+          "Run `npx fewbie template update` to add src/i18n/messages/framework." +
+          `${locale}.json.`,
+      );
+    }
+    throw error;
   }
 }
 

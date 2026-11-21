@@ -13,13 +13,36 @@ export function chartPalette(): readonly string[] {
   return CHART_PALETTE.map((fallback, index) => styles.getPropertyValue(`--chart-${index + 1}`).trim() || fallback);
 }
 
+export const CHART_GRID = "rgba(0, 0, 0, 0.06)";
+
+/** Grid/axis line color of the active theme, falling back off-DOM. */
+export function chartGridColor(): string {
+  if (typeof document === "undefined") return CHART_GRID;
+  return getComputedStyle(document.documentElement).getPropertyValue("--border").trim() || CHART_GRID;
+}
+
 export function paletteColor(index: number, palette: readonly string[] = CHART_PALETTE): string {
   return palette[index % palette.length];
 }
 
-export function withAlpha(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
+export function withAlpha(color: string, alpha: number): string {
+  const hex = color.trim();
+  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex);
+  if (match === null) {
+    // A host may define `--chart-*` as oklch()/rgb()/color-mix(); splitting those
+    // produced `rgba(NaN, NaN, NaN, α)`. The token already carries its own alpha,
+    // so pass it through untouched (R82-22).
+    return hex;
+  }
+  const digits =
+    match[1].length === 3
+      ? match[1]
+          .split("")
+          .map((digit) => digit + digit)
+          .join("")
+      : match[1];
+  const r = parseInt(digits.slice(0, 2), 16);
+  const g = parseInt(digits.slice(2, 4), 16);
+  const b = parseInt(digits.slice(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }

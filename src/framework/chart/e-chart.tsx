@@ -8,6 +8,8 @@ interface EChartProps {
   option: EChartsCoreOption;
   className?: string;
   style?: React.CSSProperties;
+  /** Accessible name; canvas output is otherwise invisible to assistive tech. */
+  ariaLabel?: string;
 }
 
 /**
@@ -16,7 +18,7 @@ interface EChartProps {
  * (className/style); the inner div fills it, which is the element echarts
  * measures.
  */
-export function EChart({ option, className, style }: EChartProps) {
+export function EChart({ option, className, style, ariaLabel }: EChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<ReturnType<typeof echarts.init> | null>(null);
 
@@ -39,7 +41,7 @@ export function EChart({ option, className, style }: EChartProps) {
   }, [option]);
 
   return (
-    <div className={className} style={style}>
+    <div className={className} style={style} role={ariaLabel ? "img" : undefined} aria-label={ariaLabel}>
       <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
     </div>
   );

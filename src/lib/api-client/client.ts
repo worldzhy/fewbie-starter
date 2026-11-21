@@ -10,15 +10,16 @@ import axios, { type AxiosRequestConfig, type AxiosResponse, type InternalAxiosR
 
 import { API_TIMEOUT_MS, AUTH_PATH_PATTERN, ApiEnvelope, BASE_URL, isEnvelope, isTrustedApiTarget } from "./protocol";
 import { ApiError, isRefreshable } from "./failure";
-import { endSession, getAccessToken } from "./session-store";
+import { endSession } from "./session-store";
 import { notifyError } from "./error-channel";
 import { ensureFreshToken, refreshAccessToken } from "./refresh-exchange";
 
 /**
  * Per-request opt-out for the framework's default error toast.
  *
- * By default every failed request surfaces the backend error via the
- * `onError` hook (currently wired to `toast.error` in request.ts). Set
+ * By default every failed request surfaces the backend error through the
+ * `onError` channel in `error-channel.ts`; the template subscribes it to
+ * `toast.error` in `framework/feedback/api-error-toast.tsx`. Set
  * `enabledDefaultErrorToast: false` when the caller renders its own richer
  * error UX (a confirm dialog, an inline form error, ...) so the same
  * failure is not surfaced twice. Defaults to true for backward safety.
@@ -58,7 +59,9 @@ api.interceptors.request.use(async (config) => {
   // about to expire. /auth/* stays exempt because those calls are the login
   // flow itself (and the refresh exchange bypasses this instance).
   const isAuthPath = AUTH_PATH_PATTERN.test(config.url ?? "");
-  const token = trusted && !isAuthPath ? await ensureFreshToken() : getAccessToken();
+  // Auth calls are the login flow itself: they must go out anonymously, so a
+  // stale token from a previous session is never attached (R82-17).
+  const token = trusted && !isAuthPath ? await ensureFreshToken() : null;
   // Within the interceptor chain headers is always an AxiosHeaders instance.
   if (token && trusted) {
     config.headers.set("Authorization", `Bearer ${token}`);

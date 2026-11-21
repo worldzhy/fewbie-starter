@@ -24,12 +24,13 @@ concurrency:
 jobs:
   # R12 for direct dev pushes: the PR job below only protects dev -> main, so a
   # framework change pushed straight to dev would otherwise reach the next
-  # branch untouched. Deliberately narrower than `verify` (no build, no image):
-  # dev takes many small pushes, and the full gate still runs on the PR.
+  # branch untouched. It runs the same gates as the PR (R82-24): a direct push
+  # used to skip template ownership, tests and the build, so a broken template
+  # could sit on dev until the promotion PR.
   guards:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
         with:
@@ -42,8 +43,18 @@ jobs:
           node-version: 24
           cache: npm
 
-      # The structure and ADR scripts use only the Node standard library, so
-      # this job needs no install and stays at seconds per push.
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Template ownership check
+        run: npm run check:template
+
+      - name: Lint
+        run: npm run lint
+
       - name: Structure gates
         run: npm run check:structure
 
@@ -52,6 +63,12 @@ jobs:
       - name: Framework ADR gate
         if: github.event.before != '0000000000000000000000000000000000000000'
         run: npm run check:framework-adr -- --base ${{ github.event.before }}
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
 
   verify:
     if: github.event_name != 'push'

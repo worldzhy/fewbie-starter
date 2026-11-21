@@ -17,12 +17,20 @@ import { listFiles, pathExists } from "./lib/walk.mjs";
 
 const HAND_WRITTEN_H1 = /<h1[\s>]/;
 const JSX_TAG = /<([A-Za-z][\w.]*)/;
-const PAGE_CONTRACT_REFERENCE = /\b(PageShell|PageHeader)\b/;
+// The shell must be rendered, not merely imported: an unused import used to
+// satisfy the gate while the page still emitted its own raw root (R82-23).
+const PAGE_CONTRACT_USAGE = /<(?:PageShell|PageHeader)\b/;
 const COMMENT = /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;
+const IMPORT_STATEMENT = /^[ \t]*import\s+[\s\S]*?from\s+["'][^"']+["'];?[ \t]*$/gm;
 
 /** Comments are prose, not implementation: a mention there satisfies nothing. */
 function stripComments(source) {
   return source.replace(COMMENT, "");
+}
+
+/** Imports only bind names; they never render anything. */
+function stripImports(source) {
+  return source.replace(IMPORT_STATEMENT, "");
 }
 
 function rootJsxTag(source) {
@@ -34,13 +42,13 @@ function rootJsxTag(source) {
 
 /** Messages for one page source; empty means the page satisfies R1. */
 export function inspectPage(source) {
-  const code = stripComments(source);
+  const code = stripImports(stripComments(source));
   const violations = [];
   if (HAND_WRITTEN_H1.test(code)) {
     violations.push("hand-written <h1>: let PageShell/PageHeader render the page title");
   }
   if (!JSX_TAG.test(code)) return violations;
-  if (PAGE_CONTRACT_REFERENCE.test(code)) return violations;
+  if (PAGE_CONTRACT_USAGE.test(code)) return violations;
   const rootTag = rootJsxTag(code);
   // Delegating to a feature component is allowed; the component owns the shell.
   if (rootTag && /^[A-Z]/.test(rootTag)) return violations;

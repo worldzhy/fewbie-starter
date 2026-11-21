@@ -2,7 +2,7 @@
 
 import type { EChartsCoreOption } from "./echarts";
 import { EChart } from "./e-chart";
-import { chartPalette, paletteColor, withAlpha } from "./chart-palette";
+import { chartPalette, chartGridColor, paletteColor, withAlpha } from "./chart-palette";
 import { chartTooltipStyle } from "./chart-theme";
 
 export type DataChartType = "line" | "bar" | "pie" | "doughnut";
@@ -96,7 +96,12 @@ function buildOption({
           name: dataset.label,
           type: "pie",
           radius: [`${inner}%`, `${outer}%`],
-          data: labels.map((name, labelIndex) => ({ name, value: dataset.data[labelIndex] ?? 0 })),
+          data: labels.map((name, labelIndex) => ({
+            name,
+            value: dataset.data[labelIndex] ?? 0,
+            // Pie slices otherwise ignore a dataset-level color override.
+            ...(dataset.color ? { itemStyle: { color: dataset.color } } : {}),
+          })),
           label: { show: false },
           ...seriesOverrides,
         };
@@ -131,7 +136,7 @@ function buildOption({
           // Pin the baseline at 0 without clipping negative values.
           min: (extent: { min: number; max: number }) => Math.min(0, extent.min),
           axisLabel: { fontSize: 10 },
-          splitLine: { lineStyle: { color: "rgba(0, 0, 0, 0.06)" } },
+          splitLine: { lineStyle: { color: chartGridColor() } },
         }
       : undefined,
     series: series as EChartsCoreOption["series"],
@@ -146,5 +151,7 @@ function buildOption({
 export function DataChart(props: DataChartProps) {
   const { className, style, optionOverrides, ...rest } = props;
   const option = mergeOption(buildOption(rest), optionOverrides);
-  return <EChart option={option} className={className} style={style} />;
+  return (
+    <EChart option={option} className={className} style={style} ariaLabel={rest.title ?? `${rest.chartType} chart`} />
+  );
 }

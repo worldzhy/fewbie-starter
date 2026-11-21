@@ -135,6 +135,10 @@ function DatePickerBase({
   };
 
   const commitTime = (nextHour: string, nextMinute: string) => {
+    // Without a date there is nothing to attach the time to; `dayjs(undefined)`
+    // used to silently produce today, submitting a date the user never picked
+    // (R82-19).
+    if (!selected) return;
     const day = dayjs(selected).format(DATE_FORMAT);
     onChange(`${day}T${nextHour}:${nextMinute}`);
   };
@@ -186,7 +190,7 @@ function DatePickerBase({
           </Button>
           {withTime && (
             <div className="flex items-center gap-1.5">
-              <Select value={hour} onValueChange={(nextHour) => commitTime(nextHour, minute)}>
+              <Select value={hour} disabled={!selected} onValueChange={(nextHour) => commitTime(nextHour, minute)}>
                 <SelectTrigger size="sm" aria-label={tc("hour")}>
                   <SelectValue />
                 </SelectTrigger>
@@ -199,7 +203,7 @@ function DatePickerBase({
                 </SelectContent>
               </Select>
               <span className="text-muted-foreground">:</span>
-              <Select value={minute} onValueChange={(nextMinute) => commitTime(hour, nextMinute)}>
+              <Select value={minute} disabled={!selected} onValueChange={(nextMinute) => commitTime(hour, nextMinute)}>
                 <SelectTrigger size="sm" aria-label={tc("minute")}>
                   <SelectValue />
                 </SelectTrigger>

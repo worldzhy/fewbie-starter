@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConfirmProvider } from "@/framework/feedback/confirm-dialog";
+import { ApiErrorToast } from "@/framework/feedback/api-error-toast";
 import { NavigationProgressProvider } from "@/framework/feedback/navigation-progress";
 import { ThemeProvider } from "@/framework/theme/theme-provider";
 import { normalizeTheme, THEME_COOKIE, type ThemePreference } from "@/framework/theme/theme";
@@ -72,8 +73,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 </TooltipProvider>
               </NavigationProgressProvider>
             </ConfirmProvider>
+            {/* Inside ThemeProvider so the toast can follow the active theme;
+                outside HostProviders so a host re-mounting its tree never drops
+                the api-client error subscription (R82-17, R82-21). */}
+            <ApiErrorToast />
+            <Toaster
+              position="top-right"
+              duration={2000}
+              theme={theme === "DARK" ? "dark" : theme === "LIGHT" ? "light" : "system"}
+            />
           </ThemeProvider>
-          <Toaster position="top-right" duration={2000} />
         </NextIntlClientProvider>
       </body>
     </html>

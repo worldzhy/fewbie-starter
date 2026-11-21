@@ -57,6 +57,14 @@ test("R1 only counts PageShell when the code uses it", () => {
     "}",
   ].join("\n");
   assert.equal(inspectPage(commentOnly).length, 1);
+  // An unused import is equally not a render (R82-23).
+  const importOnly = [
+    'import PageShell from "@/framework/page/page-shell";',
+    "export default function P() {",
+    "  return <div>Body</div>;",
+    "}",
+  ].join("\n");
+  assert.equal(inspectPage(importOnly).length, 1);
   assert.deepEqual(inspectPage("// <h1>Old title</h1>\nexport default function P() { return <UserList />; }"), []);
 });
 

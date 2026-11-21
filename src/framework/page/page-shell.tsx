@@ -32,6 +32,8 @@ interface PageShellProps {
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
+  /** Heading level of the rendered title; see PageHeader. */
+  headingLevel?: 1 | 2 | 3;
   // Extra classes for the header container only (e.g. mb-8).
   headerClassName?: string;
   // Extra classes for the page root.
@@ -52,11 +54,14 @@ const PageShell: React.FC<PageShellProps> = ({
   title,
   subtitle,
   actions,
+  headingLevel,
   headerClassName,
   className,
   children,
 }) => {
   const layoutActions = useContext(PageShellHeaderActionsContext);
+  // Both reasons for an inset may hold at once; the padding is declared once.
+  const ownsInset = inset === "platform" || width !== "full";
   const mergedActions =
     layoutActions || actions ? (
       <>
@@ -68,15 +73,23 @@ const PageShell: React.FC<PageShellProps> = ({
   return (
     <div
       className={cn(
-        "min-h-screen bg-background",
-        inset === "platform" && "px-6 pb-8",
+        // `min-h-full`, not `min-h-screen`: inside SidebarShell the main column
+        // is already offset by the platform chrome, and a viewport-height floor
+        // would stack that offset into a permanent scroll.
+        "min-h-full bg-background",
+        ownsInset && "px-6 pb-8",
         WIDTH_CLASS[width],
-        width !== "full" && "px-6 pb-8",
         className,
       )}
     >
       {title ? (
-        <PageHeader title={title} subtitle={subtitle} actions={mergedActions} className={headerClassName} />
+        <PageHeader
+          title={title}
+          subtitle={subtitle}
+          actions={mergedActions}
+          headingLevel={headingLevel}
+          className={headerClassName}
+        />
       ) : null}
       {children}
     </div>

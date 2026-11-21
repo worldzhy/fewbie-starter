@@ -1,6 +1,6 @@
 # ADR-004：模块边界允许引用 registryDependencies 声明的兄弟 item
 
-- 状态：已采纳
+- 状态：已被取代（devbie ADR-065: registry item 落位 `src/features`，模块边界改由 `fewbie.lock.json` 判定）
 - 日期：2026-11-22
 - 仓：fewbie-starter
 - 关系：细化 ADR-057（fewbie 模块契约与锁文件）在模板 eslint 门禁上的落地；对应 devbie ADR-062
@@ -18,6 +18,8 @@
 3. `MODULE_BOUNDARY_MESSAGE` 同步说明「自身文件与 `registryDependencies` 声明的兄弟 item」。
 
 ## 影响
+
+> 取代说明（2026-11-22）：本 ADR 的机械结论仍成立——item 可以导入兄弟 item；但 `src/modules` 不再存在，item 与宿主 feature 共享 `src/features/**`，模块规则的文件集改由 `fewbie.lock.json` 给出，允许的目标改为「lockfile 中任一已安装 item」。见 devbie ADR-065。
 
 - 使用兄弟 item 的宿主：`fewbie template update` 后 lint 转绿，业务代码无需改动。
 - 未同步模板的宿主：旧规则继续生效，表现为可观测的 lint error，不会静默放行。

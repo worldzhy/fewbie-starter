@@ -8,7 +8,7 @@ import base from "@devbie/style-guide/eslint/base";
 import next from "@devbie/style-guide/eslint/next";
 import { ESLint } from "eslint";
 
-import { frameworkLintConfig } from "../eslint.config.mjs";
+import { createFrameworkLintConfig } from "../eslint.config.mjs";
 
 /**
  * Lint a temporary project with the framework rule set only.
@@ -16,8 +16,11 @@ import { frameworkLintConfig } from "../eslint.config.mjs";
  * Fixtures must not live under `src/` in the repo: `next build` and `tsc`
  * would compile deliberately broken code. A temp root also proves the rules
  * are file-scoped by path rather than by file name coincidences.
+ *
+ * `moduleFiles` stands in for the lockfile: it is what tells the rule set which
+ * fixtures are registry items (ADR-065).
  */
-async function lintFixture(files) {
+async function lintFixture(files, moduleFiles = []) {
   const root = await mkdtemp(path.join(tmpdir(), "fewbie-rules-"));
   try {
     for (const [relative, content] of Object.entries(files)) {
@@ -28,7 +31,7 @@ async function lintFixture(files) {
     const eslint = new ESLint({
       cwd: root,
       overrideConfigFile: true,
-      overrideConfig: [...base, ...next, ...frameworkLintConfig],
+      overrideConfig: [...base, ...next, ...createFrameworkLintConfig(moduleFiles)],
     });
     const results = await eslint.lintFiles(Object.keys(files));
     return results.flatMap((result) =>
@@ -220,18 +223,25 @@ test("R11 rejects an inline query-key literal", async () => {
   assert.ok(errors(template, "no-restricted-syntax").some((message) => message.text.includes("(R11)")));
 });
 
-test("registry modules may only reach the framework surface", async () => {
-  const allowed = await lintFixture({
-    "src/modules/login-page/login-page.tsx": `
+const LOGIN_PAGE = "src/features/login-page/login-page.tsx";
+// What the lockfile would record for a host that installed both items.
+const INSTALLED_ITEMS = [LOGIN_PAGE, "src/features/password-checklist/index.ts"];
+
+test("registry items may only reach the framework surface and installed items", async () => {
+  const allowed = await lintFixture(
+    {
+      [LOGIN_PAGE]: `
       import { Button } from "@/components/ui/button";
       import { cn } from "@/lib/utils";
+      import { checkPasswordPolicy } from "@/features/password-checklist";
       export function LoginPage({ label }: { label: string }) {
-        return <Button className={cn("w-full")}>{label}</Button>;
+        return <Button className={cn("w-full")} onClick={() => checkPasswordPolicy(label)}>{label}</Button>;
       }
     `,
-  });
-  assert.deepEqual(errors(allowed, "no-restricted-imports"), []);
-  assert.deepEqual(errors(allowed, "no-restricted-syntax"), []);
+    },
+    INSTALLED_ITEMS,
+  );
+  assert.deepEqual(errors(allowed), []);
 
   for (const source of [
     "next/navigation",
@@ -240,25 +250,34 @@ test("registry modules may only reach the framework surface", async () => {
     "@tanstack/react-query",
     "sonner",
     "@/i18n/request",
-    "@/features/user/api",
     "@/components/host-widget",
   ]) {
-    const messages = await lintFixture({
-      "src/modules/login-page/login-page.tsx": `import { helper } from "${source}";\nexport const value = helper;`,
-    });
-    assert.ok(errors(messages, "no-restricted-imports").length >= 1, `${source} must be rejected inside src/modules`);
+    const messages = await lintFixture(
+      { [LOGIN_PAGE]: `import { helper } from "${source}";\nexport const value = helper;` },
+      INSTALLED_ITEMS,
+    );
+    assert.ok(errors(messages, "no-restricted-imports").length >= 1, `${source} must be rejected inside an item`);
   }
+
+  // A host feature shares `src/features/**` but is not an installed item.
+  const hostFeature = await lintFixture(
+    { [LOGIN_PAGE]: 'import { load } from "@/features/user/api";\nexport const value = load;' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(hostFeature, "no-restricted-syntax").some((message) => message.text.includes("host feature")));
 });
 
-test("registry modules cannot fetch on their own", async () => {
-  const globalFetch = await lintFixture({
-    "src/modules/login-page/login-page.tsx": 'export const load = () => fetch("/api/session");',
-  });
+test("registry items cannot fetch on their own", async () => {
+  const globalFetch = await lintFixture(
+    { [LOGIN_PAGE]: 'export const load = () => fetch("/api/session");' },
+    INSTALLED_ITEMS,
+  );
   assert.ok(errors(globalFetch, "no-restricted-globals").length >= 1);
 
-  const memberFetch = await lintFixture({
-    "src/modules/login-page/login-page.tsx": 'export const load = () => window.fetch("/api/session");',
-  });
+  const memberFetch = await lintFixture(
+    { [LOGIN_PAGE]: 'export const load = () => window.fetch("/api/session");' },
+    INSTALLED_ITEMS,
+  );
   assert.ok(errors(memberFetch, "no-restricted-syntax").length >= 1);
 });
 

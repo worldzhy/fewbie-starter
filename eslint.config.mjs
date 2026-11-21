@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import base from "@devbie/style-guide/eslint/base";
 import next from "@devbie/style-guide/eslint/next";
 
@@ -18,14 +20,35 @@ import next from "@devbie/style-guide/eslint/next";
  */
 const HOST_CODE = ["src/app/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"];
 const FRAMEWORK_CODE = ["src/framework/**/*.{ts,tsx}"];
-// Registry modules are copy-assembled by `fewbie modules add`: they may only
-// depend on React, the shadcn primitives and sibling registry items they
-// declare in registryDependencies, so transport, i18n, router, toast and state
-// libraries stay in the host adapter that renders them (ADR-057, ADR-062).
-const MODULE_CODE = ["src/modules/**/*.{ts,tsx}"];
+// Registry items and host features share `src/features/**` (ADR-065), so item
+// identity comes from the install record instead of a directory prefix. The
+// lockfile lists every installed file; a host without one has no items.
+const LOCKFILE = new URL("./fewbie.lock.json", import.meta.url);
+const FEATURE_PREFIX = "src/features/";
 const MODULE_BOUNDARY_MESSAGE =
-  "A registry module may import React, @/components/ui/*, @/lib/utils, its own files and the sibling items it declares " +
-  "in registryDependencies; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
+  "A registry item may import React, @/components/ui/*, @/lib/utils, its own files and the sibling items installed " +
+  "next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
+
+/**
+ * Files the lockfile records as registry items. Copy-assembled items may only
+ * depend on the framework surface and other installed items, so transport,
+ * i18n, router, toast and state libraries stay in the host adapter that renders
+ * them (ADR-057, ADR-062).
+ */
+function installedModuleFiles() {
+  let lockfile;
+  try {
+    lockfile = JSON.parse(readFileSync(LOCKFILE, "utf8"));
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+  return Object.values(lockfile.modules ?? {}).flatMap((module) => Object.keys(module.files ?? {}));
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 const COLOR_UTILITY = "bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow|decoration|caret|accent";
 const PALETTE_CLASS =
@@ -89,145 +112,181 @@ const OFF_SCALE_SYNTAX = [
   },
 ];
 
-export const frameworkLintConfig = [
-  {
-    files: HOST_CODE,
-    ignores: ["src/components/ui/**"],
-    rules: {
-      // R4: transport goes through @/api or lib/api-client.
-      "no-restricted-globals": [
-        "error",
-        {
-          name: "fetch",
-          message: "Call the generated @/api client (or lib/api-client) instead of global fetch (R4).",
-        },
-        {
-          name: "XMLHttpRequest",
-          message: "Call the generated @/api client (or lib/api-client) instead of XMLHttpRequest (R4).",
-        },
-      ],
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "axios",
-              message: "Import the shared client from @/lib/api-client instead of axios (R4).",
-            },
-          ],
-        },
-      ],
-      "no-restricted-syntax": [
-        "error",
-        // R3: data colors come from chart-palette, UI colors from semantic tokens.
-        // R6: radius and spacing only from the design scale.
-        ...PALETTE_SYNTAX,
-        ...STYLE_COLOR_SYNTAX,
-        ...OFF_SCALE_SYNTAX,
-        // R2: loading surfaces come from the shared state components.
-        {
-          selector: `ConditionalExpression[test.name=/${LOADING_BRANCH.source}/]`,
-          message: "Render LoadingState/ErrorState/EmptyState instead of branching to inline state markup (R2).",
-        },
-        {
-          selector: `LogicalExpression[left.name=/${LOADING_BRANCH.source}/]`,
-          message: "Render LoadingState/ErrorState/EmptyState instead of branching to inline state markup (R2).",
-        },
-        {
-          selector: 'ImportDeclaration[source.value="@/components/ui/skeleton"]',
-          message: "Use LoadingState from @/framework/states instead of the bare Skeleton primitive (R2).",
-        },
-        {
-          selector: 'JSXOpeningElement[name.name="Loader2"]',
-          message: "Use LoadingState from @/framework/states instead of a page-local spinner (R2).",
-        },
-        // R4: one HTTP client. The global ban misses member calls and the import
-        // ban misses a dynamic import.
-        {
-          selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
-          message: "Call the generated @/api client (or lib/api-client) instead of fetch (R4).",
-        },
-        {
-          selector: 'ImportExpression[source.value="axios"]',
-          message: "Import the shared client from @/lib/api-client instead of axios (R4).",
-        },
-        // R11: query keys are domain constants, not inline literals.
-        {
-          selector: 'Property[key.name="queryKey"] > ArrayExpression > Literal:first-child',
-          message: "Export a domain query-key constant instead of an inline string literal (R11).",
-        },
-        {
-          selector: 'Property[key.name="queryKey"] > Literal',
-          message: "Export a domain query-key constant instead of an inline string literal (R11).",
-        },
-        {
-          selector: 'Property[key.name="queryKey"] TemplateLiteral',
-          message: "Export a domain query-key constant instead of an inline template literal (R11).",
-        },
-      ],
+export function createFrameworkLintConfig(moduleFiles) {
+  return [
+    {
+      files: HOST_CODE,
+      ignores: [...moduleFiles, "src/components/ui/**"],
+      rules: {
+        // R4: transport goes through @/api or lib/api-client.
+        "no-restricted-globals": [
+          "error",
+          {
+            name: "fetch",
+            message: "Call the generated @/api client (or lib/api-client) instead of global fetch (R4).",
+          },
+          {
+            name: "XMLHttpRequest",
+            message: "Call the generated @/api client (or lib/api-client) instead of XMLHttpRequest (R4).",
+          },
+        ],
+        "no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              {
+                name: "axios",
+                message: "Import the shared client from @/lib/api-client instead of axios (R4).",
+              },
+            ],
+          },
+        ],
+        "no-restricted-syntax": [
+          "error",
+          // R3: data colors come from chart-palette, UI colors from semantic tokens.
+          // R6: radius and spacing only from the design scale.
+          ...PALETTE_SYNTAX,
+          ...STYLE_COLOR_SYNTAX,
+          ...OFF_SCALE_SYNTAX,
+          // R2: loading surfaces come from the shared state components.
+          {
+            selector: `ConditionalExpression[test.name=/${LOADING_BRANCH.source}/]`,
+            message: "Render LoadingState/ErrorState/EmptyState instead of branching to inline state markup (R2).",
+          },
+          {
+            selector: `LogicalExpression[left.name=/${LOADING_BRANCH.source}/]`,
+            message: "Render LoadingState/ErrorState/EmptyState instead of branching to inline state markup (R2).",
+          },
+          {
+            selector: 'ImportDeclaration[source.value="@/components/ui/skeleton"]',
+            message: "Use LoadingState from @/framework/states instead of the bare Skeleton primitive (R2).",
+          },
+          {
+            selector: 'JSXOpeningElement[name.name="Loader2"]',
+            message: "Use LoadingState from @/framework/states instead of a page-local spinner (R2).",
+          },
+          // R4: one HTTP client. The global ban misses member calls and the import
+          // ban misses a dynamic import.
+          {
+            selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
+            message: "Call the generated @/api client (or lib/api-client) instead of fetch (R4).",
+          },
+          {
+            selector: 'ImportExpression[source.value="axios"]',
+            message: "Import the shared client from @/lib/api-client instead of axios (R4).",
+          },
+          // R11: query keys are domain constants, not inline literals.
+          {
+            selector: 'Property[key.name="queryKey"] > ArrayExpression > Literal:first-child',
+            message: "Export a domain query-key constant instead of an inline string literal (R11).",
+          },
+          {
+            selector: 'Property[key.name="queryKey"] > Literal',
+            message: "Export a domain query-key constant instead of an inline string literal (R11).",
+          },
+          {
+            selector: 'Property[key.name="queryKey"] TemplateLiteral',
+            message: "Export a domain query-key constant instead of an inline template literal (R11).",
+          },
+        ],
+      },
     },
-  },
-  {
-    files: HOST_CODE,
-    ignores: ["src/components/ui/**"],
-    rules: {
-      // R7: display copy lives in the host i18n message files.
-      "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
+    {
+      files: HOST_CODE,
+      ignores: [...moduleFiles, "src/components/ui/**"],
+      rules: {
+        // R7: display copy lives in the host i18n message files.
+        "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
+      },
     },
-  },
-  {
-    // R3/R6/R7 for the framework runtime: these files are the reference host
-    // code copies, so they must pass the same token, scale and copy gates.
-    files: FRAMEWORK_CODE,
-    rules: {
-      "no-restricted-syntax": ["error", ...PALETTE_SYNTAX, ...STYLE_COLOR_SYNTAX, ...OFF_SCALE_SYNTAX],
-      "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
+    {
+      // R3/R6/R7 for the framework runtime: these files are the reference host
+      // code copies, so they must pass the same token, scale and copy gates.
+      files: FRAMEWORK_CODE,
+      rules: {
+        "no-restricted-syntax": ["error", ...PALETTE_SYNTAX, ...STYLE_COLOR_SYNTAX, ...OFF_SCALE_SYNTAX],
+        "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
+      },
     },
-  },
-  {
-    // Module boundary (ADR-057): a registry item is copied into the host as-is,
-    // so it must compile against the framework surface alone.
-    files: MODULE_CODE,
-    rules: {
-      "no-restricted-globals": [
-        "error",
-        { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
-        { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
-      ],
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["next", "next/*", "next-intl", "next-intl/*"],
-              message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
-            },
-            {
-              group: ["axios", "@tanstack/*", "swr", "sonner", "@radix-ui/*"],
-              message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
-            },
-            {
-              group: ["@/app/*", "@/features/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*"],
-              message: MODULE_BOUNDARY_MESSAGE,
-            },
-            { group: ["@/components/*", "!@/components/ui"], message: MODULE_BOUNDARY_MESSAGE },
-            { group: ["@/lib/*", "!@/lib/utils"], message: MODULE_BOUNDARY_MESSAGE },
-          ],
-        },
-      ],
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
-          message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
-        },
-        {
-          selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr|@tanstack\\/.*)$/]",
-          message: MODULE_BOUNDARY_MESSAGE,
-        },
-      ],
+    ...moduleBoundaryConfig(moduleFiles),
+  ];
+}
+
+/**
+ * Module boundary (ADR-057, ADR-065): a registry item is copied into the host
+ * as-is, so it must compile against the framework surface plus the other
+ * installed items alone.
+ */
+function moduleBoundaryConfig(moduleFiles) {
+  if (moduleFiles.length === 0) return [];
+
+  const siblings = [
+    ...new Set(
+      moduleFiles
+        .filter((file) => file.startsWith(FEATURE_PREFIX))
+        .map((file) => file.slice(FEATURE_PREFIX.length).split("/")[0]),
+    ),
+  ];
+  // A registry item may import another installed item, but never the host's own
+  // feature that happens to sit in the same tree.
+  const hostFeatureImport = new RegExp(`^@/features/(?!(?:${siblings.map(escapeRegExp).join("|")})(?:/|$))`);
+
+  return [
+    {
+      files: moduleFiles,
+      rules: {
+        "no-restricted-globals": [
+          "error",
+          { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+          { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+        ],
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: ["next", "next/*", "next-intl", "next-intl/*"],
+                message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
+              },
+              {
+                group: ["axios", "@tanstack/*", "swr", "sonner", "@radix-ui/*"],
+                message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
+              },
+              {
+                group: ["@/app/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*"],
+                message: MODULE_BOUNDARY_MESSAGE,
+              },
+              { group: ["@/components/*", "!@/components/ui"], message: MODULE_BOUNDARY_MESSAGE },
+              { group: ["@/lib/*", "!@/lib/utils"], message: MODULE_BOUNDARY_MESSAGE },
+            ],
+          },
+        ],
+        "no-restricted-syntax": [
+          "error",
+          {
+            selector: `ImportDeclaration[source.value=/${hostFeatureImport.source}/]`,
+            message: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host feature.`,
+          },
+          {
+            selector: `ImportExpression[source.value=/${hostFeatureImport.source}/]`,
+            message: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host feature.`,
+          },
+          {
+            selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
+            message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
+          },
+          {
+            selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr|@tanstack\\/.*)$/]",
+            message: MODULE_BOUNDARY_MESSAGE,
+          },
+        ],
+        // R7: an item has no i18n of its own; copy arrives through labels.
+        "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
+      },
     },
-  },
-];
+  ];
+}
+
+export const frameworkLintConfig = createFrameworkLintConfig(installedModuleFiles());
 
 export default [...base, ...next, ...frameworkLintConfig];

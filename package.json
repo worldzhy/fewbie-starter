@@ -5,6 +5,12 @@
   "prettier": "@devbie/style-guide/prettier",
   "scripts": {
     "build": "next build",
+    "check:framework-adr": "node scripts/check-framework-adr.mjs",
+    "check:layout-shell": "node scripts/check-layout-shell.mjs",
+    "check:page-contract": "node scripts/check-page-contract.mjs",
+    "check:primitives": "node scripts/check-primitives.mjs",
+    "check:routes": "node scripts/check-route-conventions.mjs",
+    "check:structure": "npm run check:page-contract && npm run check:layout-shell && npm run check:primitives && npm run check:routes",
     "check:template": "FEWBIE_TEMPLATE_REGISTRY_COMPLETE=1 fewbie template update --check --template-path .",
     "dev": "next dev",
     "format": "prettier --write .",
@@ -12,7 +18,7 @@
     "lint": "eslint",
     "prepare": "command -v git >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
     "start": "next start",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "test": "node --import tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.mjs\""
   },
   "dependencies": {
     "@devbie/frontend-monitor-sdk": "^1.12.0",

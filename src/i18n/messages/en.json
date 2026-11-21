@@ -13,5 +13,11 @@
     "error": "Error",
     "warning": "Warning",
     "done": "Done"
+  },
+  "home": {
+    "title": "fewbie",
+    "description": "Basic template: Next.js App Router + Tailwind CSS + shadcn/ui.",
+    "editHint": "Edit src/app/page.tsx to start building.",
+    "docs": "shadcn/ui docs"
   }
 }

@@ -23,6 +23,10 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+        with:
+          # R12 compares the PR against its base branch, so the merge base must
+          # be present in the checkout (the default shallow clone lacks it).
+          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
@@ -45,6 +49,17 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      # R1/R5/R9/R10: page contract, sidebar shell, primitive copies and route
+      # naming. The scripts ship with the template, so hosts run the same gate.
+      - name: Structure gates
+        run: npm run check:structure
+
+      # R12: a framework-owned file change is a cross-host contract and needs a
+      # design decision in the same PR. Only meaningful against a base branch.
+      - name: Framework ADR gate
+        if: github.event_name == 'pull_request'
+        run: npm run check:framework-adr -- --base origin/${{ github.base_ref }}
 
       # A test that only runs locally does not gate the generated skeleton
       # (R20-26): the smoke test ships with the template, so CI must run it.

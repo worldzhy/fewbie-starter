@@ -1,0 +1,22 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "close": "Close",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "empty": "No data",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "done": "Done",
+    "selectDate": "Select date",
+    "selectDateTime": "Select date and time",
+    "clear": "Clear",
+    "hour": "Hour",
+    "minute": "Minute"
+  }
+}

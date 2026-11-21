@@ -13,5 +13,11 @@
     "error": "错误",
     "warning": "警告",
     "done": "完成"
+  },
+  "home": {
+    "title": "fewbie",
+    "description": "基础模板：Next.js App Router + Tailwind CSS + shadcn/ui。",
+    "editHint": "编辑 src/app/page.tsx 开始构建。",
+    "docs": "shadcn/ui 文档"
   }
 }

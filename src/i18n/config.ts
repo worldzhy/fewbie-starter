@@ -16,6 +16,20 @@ export type Locale = (typeof routing.locales)[number];
 
 const LOCALE_COOKIE = "NEXT_LOCALE";
 
+/**
+ * Framework namespace of one locale. A host adopted before the framework
+ * message files existed has no `framework.<locale>.json` yet, so the import is
+ * optional: `template update` creates the file on its next run, and until then
+ * the namespace is simply empty instead of failing the build.
+ */
+async function loadFrameworkMessages(locale: Locale): Promise<Record<string, unknown>> {
+  try {
+    return (await import(`./messages/framework.${locale}.json`)).default;
+  } catch {
+    return {};
+  }
+}
+
 // The next-intl plugin aliases `next-intl/config` to this module, so the
 // default export must be the request configuration (not the routing object).
 //
@@ -33,9 +47,15 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = cookieLocale;
   }
 
+  // Host copy and framework copy are separate files so `template update` can
+  // own the framework namespace without touching host messages. The framework
+  // namespace wins on a collision (ADR-056 D8).
+  const hostMessages = (await import(`./messages/${locale}.json`)).default;
+  const frameworkMessages = await loadFrameworkMessages(locale);
+
   return {
     locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
+    messages: { ...hostMessages, framework: frameworkMessages },
   };
 });
 

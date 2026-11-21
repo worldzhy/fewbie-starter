@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale, setRequestLocale } from "next-intl/server";
-import { FrontendMonitor } from "@/components/frontend-monitor";
+import { cookies } from "next/headers";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConfirmProvider } from "@/framework/feedback/confirm-dialog";
+import { NavigationProgressProvider } from "@/framework/feedback/navigation-progress";
+import { ThemeProvider } from "@/framework/theme/theme-provider";
+import { normalizeTheme, THEME_COOKIE, type ThemePreference } from "@/framework/theme/theme";
 import { type Locale } from "@/i18n/config";
+import { HostProviders } from "./host-providers";
 import "./globals.css";
 
 // Locale resolution reads the NEXT_LOCALE cookie, so every render depends on
@@ -11,14 +18,22 @@ import "./globals.css";
 // prerendering a single baked locale.
 export const dynamic = "force-dynamic";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Both faces are self-hosted under ./fonts. next/font/google downloads at
+// build time, and when that fetch fails (blocked fonts.googleapis.com,
+// air-gapped CI) every family silently degrades to a metric-matched Arial
+// lookalike.
+const inter = localFont({
+  src: "./fonts/inter-latin.woff2",
+  weight: "100 900",
+  variable: "--font-inter",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/geist-mono-latin.woff2",
+  weight: "100 900",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -30,13 +45,35 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = (await getLocale()) as Locale;
   setRequestLocale(locale);
   const messages = await getMessages();
+  // Rendering the theme class server-side keeps the first paint in the user's
+  // preference; a system preference is resolved by the inline script before
+  // anything is painted.
+  const theme: ThemePreference = normalizeTheme((await cookies()).get(THEME_COOKIE)?.value);
 
   return (
-    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+    <html lang={locale} className={theme === "DARK" ? "dark" : undefined} suppressHydrationWarning>
+      <body className={`${inter.variable} ${geistMono.variable}`}>
+        {theme === "SYSTEM" ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html:
+                'try{if(window.matchMedia("(prefers-color-scheme: dark)").matches){document.documentElement.classList.add("dark")}}catch(e){}',
+            }}
+          />
+        ) : null}
+        {/* Framework providers mount here so the hooks they expose work in
+            every host without the host remembering to wire them (ADR-001). */}
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <FrontendMonitor />
-          {children}
+          <ThemeProvider initialTheme={theme}>
+            <ConfirmProvider>
+              <NavigationProgressProvider>
+                <TooltipProvider>
+                  <HostProviders>{children}</HostProviders>
+                </TooltipProvider>
+              </NavigationProgressProvider>
+            </ConfirmProvider>
+          </ThemeProvider>
+          <Toaster position="top-right" duration={2000} />
         </NextIntlClientProvider>
       </body>
     </html>

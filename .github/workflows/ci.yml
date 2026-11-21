@@ -11,6 +11,10 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  push:
+    # Direct pushes to dev used to be ungated until the next dev -> main PR
+    # (R1-22). The `guards` job covers them without the build and image cost.
+    branches: [dev]
   workflow_dispatch:
 
 concurrency:
@@ -18,11 +22,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # R12 for direct dev pushes: the PR job below only protects dev -> main, so a
+  # framework change pushed straight to dev would otherwise reach the next
+  # branch untouched. Deliberately narrower than `verify` (no build, no image):
+  # dev takes many small pushes, and the full gate still runs on the PR.
+  guards:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The ADR gate diffs the pushed range, so the previous head must be
+          # present in the checkout.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # The structure and ADR scripts use only the Node standard library, so
+      # this job needs no install and stays at seconds per push.
+      - name: Structure gates
+        run: npm run check:structure
+
+      # `github.event.before` is all zeros for a branch's first push, where
+      # there is nothing to diff against.
+      - name: Framework ADR gate
+        if: github.event.before != '0000000000000000000000000000000000000000'
+        run: npm run check:framework-adr -- --base ${{ github.event.before }}
+
   verify:
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+        with:
+          # R12 compares the PR against its base branch, so the merge base must
+          # be present in the checkout (the default shallow clone lacks it).
+          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
@@ -45,6 +85,17 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      # R1/R5/R9/R10: page contract, sidebar shell, primitive copies and route
+      # naming. The scripts ship with the template, so hosts run the same gate.
+      - name: Structure gates
+        run: npm run check:structure
+
+      # R12: a framework-owned file change is a cross-host contract and needs a
+      # design decision in the same PR. Only meaningful against a base branch.
+      - name: Framework ADR gate
+        if: github.event_name == 'pull_request'
+        run: npm run check:framework-adr -- --base origin/${{ github.base_ref }}
 
       # A test that only runs locally does not gate the generated skeleton
       # (R20-26): the smoke test ships with the template, so CI must run it.

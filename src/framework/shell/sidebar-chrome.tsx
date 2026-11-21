@@ -57,7 +57,12 @@ export function SidebarNavLink({
       {!collapsed && <span>{label}</span>}
     </div>
   ) : (
-    <Link href={href} className={className} aria-current={active ? "page" : undefined}>
+    <Link
+      href={href}
+      className={className}
+      aria-label={collapsed ? label : undefined}
+      aria-current={active ? "page" : undefined}
+    >
       <Icon className={cn("size-4", iconColor)} />
       {!collapsed && <span>{label}</span>}
     </Link>

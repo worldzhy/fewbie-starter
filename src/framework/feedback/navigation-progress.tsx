@@ -74,7 +74,15 @@ export function NavigationProgressProvider({ children }: { children: React.React
     // Next's <Link> exposes no pending state to the layout rendering it, so the
     // click is the earliest point where feedback can start for link navigation.
     document.addEventListener("click", handleClick, true);
-    return () => document.removeEventListener("click", handleClick, true);
+    return () => {
+      document.removeEventListener("click", handleClick, true);
+      // Unmounting mid-navigation must not leave the timeout holding a state
+      // setter for a component that no longer exists.
+      if (linkTimeout.current !== null) {
+        clearTimeout(linkTimeout.current);
+        linkTimeout.current = null;
+      }
+    };
   }, [pathname]);
 
   const visible = isNavigating || linkNavigating;

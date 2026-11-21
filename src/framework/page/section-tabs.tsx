@@ -26,13 +26,12 @@ export default function SectionTabs({
 }) {
   const pathname = usePathname() ?? "";
   // A nested route (e.g. /modules/history) also prefix-matches its parent tab
-  // (/modules), so the most specific matching href must win.
+  // (/modules), so the most specific matching href must win. A route outside
+  // the tab set leaves no tab active rather than falsely marking the first one.
   const activeHref =
     items
       .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
-      .sort((a, b) => b.href.length - a.href.length)[0]?.href ??
-    items[0]?.href ??
-    "";
+      .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? "";
 
   return (
     <Tabs value={activeHref} className={cn(className)}>

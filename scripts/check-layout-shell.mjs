@@ -5,7 +5,7 @@
  * The two historical layouts (project and AWS account) were the same skeleton
  * copied twice. This check flags a nested `layout.tsx` that hand-writes the
  * fixed sidebar frame (`fixed bottom-0 left-0`, or the old `project-sidebar`
- * class) without importing SidebarShell. The root `src/app/layout.tsx` is
+ * class) without rendering SidebarShell. The root `src/app/layout.tsx` is
  * framework-owned and excluded.
  */
 import { readFile } from "node:fs/promises";
@@ -16,11 +16,25 @@ import { listFiles, pathExists } from "./lib/walk.mjs";
 
 const RAW_SIDEBAR_FRAME = /fixed\s+bottom-0\s+left-0/;
 const LEGACY_SIDEBAR_CLASS = /project-sidebar/;
+// Importing (or naming in a comment) the shell is not rendering it: only a JSX
+// element owns the frame (R83-16).
+const SIDEBAR_RENDER = /<SidebarShell\b/;
+const COMMENT = /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;
+const IMPORT_STATEMENT = /^[ \t]*import\s+[\s\S]*?from\s+["'][^"']+["'];?[ \t]*$/gm;
+
+function stripComments(source) {
+  return source.replace(COMMENT, "");
+}
+
+function stripImports(source) {
+  return source.replace(IMPORT_STATEMENT, "");
+}
 
 /** Messages for one layout source; empty means the layout satisfies R5. */
 export function inspectLayout(source) {
-  const rebuildsFrame = RAW_SIDEBAR_FRAME.test(source) || LEGACY_SIDEBAR_CLASS.test(source);
-  if (rebuildsFrame && !/\bSidebarShell\b/.test(source)) {
+  const code = stripImports(stripComments(source));
+  const rebuildsFrame = RAW_SIDEBAR_FRAME.test(code) || LEGACY_SIDEBAR_CLASS.test(code);
+  if (rebuildsFrame && !SIDEBAR_RENDER.test(code)) {
     return ["account-level layouts must render SidebarShell instead of hand-writing the fixed sidebar frame"];
   }
   return [];

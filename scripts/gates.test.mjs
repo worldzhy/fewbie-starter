@@ -45,6 +45,17 @@ test("R1 accepts a thin page that delegates to a component", () => {
 test("R1 rejects a hand-written h1 and a raw JSX root", () => {
   assert.equal(inspectPage("export default function P() { return <main><h1>Users</h1></main>; }").length, 2);
   assert.equal(inspectPage("export default function P() { return <main>Users</main>; }").length, 1);
+  // The shell must own the root, not sit inside a hand-written frame (R83-16).
+  assert.equal(inspectPage("export default function P() { return <main><PageShell /></main>; }").length, 1);
+  // A non-JSX heading escapes the tag scan (R83-16).
+  assert.equal(
+    inspectPage('export default function P() { return React.createElement("h1", null, "Users"); }').length,
+    1,
+  );
+});
+
+test("R1 accepts a fragment that still renders the shell", () => {
+  assert.deepEqual(inspectPage("export default function P() { return <><PageShell /></>; }"), []);
 });
 
 test("R1 only counts PageShell when the code uses it", () => {
@@ -57,6 +68,14 @@ test("R1 only counts PageShell when the code uses it", () => {
     "}",
   ].join("\n");
   assert.equal(inspectPage(commentOnly).length, 1);
+  // An unused import is equally not a render (R82-23).
+  const importOnly = [
+    'import PageShell from "@/framework/page/page-shell";',
+    "export default function P() {",
+    "  return <div>Body</div>;",
+    "}",
+  ].join("\n");
+  assert.equal(inspectPage(importOnly).length, 1);
   assert.deepEqual(inspectPage("// <h1>Old title</h1>\nexport default function P() { return <UserList />; }"), []);
 });
 
@@ -77,7 +96,11 @@ test("R1 scans every page.tsx and reports only the violating one", async () => {
 test("R5 rejects a hand-written fixed sidebar frame", () => {
   const rebuilt = '<aside className="fixed bottom-0 left-0 top-14 w-60" />';
   assert.equal(inspectLayout(rebuilt).length, 1);
-  assert.deepEqual(inspectLayout(`${rebuilt}\nimport { SidebarShell } from "@/framework/shell/sidebar-shell";`), []);
+  // Rendering the shell satisfies the rule ...
+  assert.deepEqual(inspectLayout(`${rebuilt}\nreturn <SidebarShell />;`), []);
+  // ... but importing or naming it does not (R83-16).
+  assert.equal(inspectLayout(`${rebuilt}\nimport { SidebarShell } from "@/framework/shell/sidebar-shell";`).length, 1);
+  assert.equal(inspectLayout(`${rebuilt}\n// TODO: render <SidebarShell />`).length, 1);
 });
 
 test("R5 leaves the framework root layout alone", async () => {

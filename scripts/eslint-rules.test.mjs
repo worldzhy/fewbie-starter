@@ -93,6 +93,25 @@ test("R3 rejects raw palette classes", async () => {
   assert.ok(errors(messages, "no-restricted-syntax").some((message) => message.text.includes("(R3)")));
 });
 
+test("R3 rejects arbitrary colors and undefined palettes", async () => {
+  const arbitrary = await lintFixture({
+    "src/app/page.tsx": 'export function Page() { return <div className="bg-[#ff0000]" />; }',
+  });
+  assert.ok(errors(arbitrary, "no-restricted-syntax").some((message) => message.text.includes("(R3)")));
+
+  const unknown = await lintFixture({
+    "src/app/page.tsx": 'export function Page() { return <div className="bg-night-900" />; }',
+  });
+  assert.ok(errors(unknown, "no-restricted-syntax").some((message) => message.text.includes("(R3)")));
+
+  // Token references, gradients over tokens and semantic chart colors pass.
+  const tokens = await lintFixture({
+    "src/app/page.tsx":
+      'export function Page() { return <div className="bg-[var(--primary)] bg-chart-1 text-muted-foreground" />; }',
+  });
+  assert.deepEqual(errors(tokens, "no-restricted-syntax"), []);
+});
+
 test("R3 also rejects hard-coded colors in inline styles", async () => {
   const hex = await lintFixture({
     "src/features/status.tsx": 'export function Status() { return <div style={{ color: "#ff0000" }} />; }',
@@ -120,6 +139,11 @@ test("R6 rejects off-scale radius and arbitrary spacing", async () => {
     "src/app/page.tsx": 'export function Page() { return <div className="h-[200px] size-[70px] z-[9999]" />; }',
   });
   assert.ok(errors(sizing, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
+
+  const arbitraryRadius = await lintFixture({
+    "src/app/page.tsx": 'export function Page() { return <div className="rounded-[7px]" />; }',
+  });
+  assert.ok(errors(arbitraryRadius, "no-restricted-syntax").some((message) => message.text.includes("(R6)")));
 });
 
 test("R6 allows the radii its own message recommends", async () => {
@@ -217,6 +241,7 @@ test("registry modules may only reach the framework surface", async () => {
     "sonner",
     "@/i18n/request",
     "@/features/user/api",
+    "@/components/host-widget",
   ]) {
     const messages = await lintFixture({
       "src/modules/login-page/login-page.tsx": `import { helper } from "${source}";\nexport const value = helper;`,

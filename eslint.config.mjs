@@ -19,33 +19,48 @@ import next from "@devbie/style-guide/eslint/next";
 const HOST_CODE = ["src/app/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"];
 const FRAMEWORK_CODE = ["src/framework/**/*.{ts,tsx}"];
 // Registry modules are copy-assembled by `fewbie modules add`: they may only
-// depend on React and the shadcn primitives, so transport, i18n, router, toast
-// and state libraries stay in the host adapter that renders them (ADR-057).
+// depend on React, the shadcn primitives and sibling registry items they
+// declare in registryDependencies, so transport, i18n, router, toast and state
+// libraries stay in the host adapter that renders them (ADR-057, ADR-062).
 const MODULE_CODE = ["src/modules/**/*.{ts,tsx}"];
 const MODULE_BOUNDARY_MESSAGE =
-  "A registry module may import React, @/components/ui/*, @/lib/utils and its own files only; " +
-  "host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
+  "A registry module may import React, @/components/ui/*, @/lib/utils, its own files and the sibling items it declares " +
+  "in registryDependencies; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
+const COLOR_UTILITY = "bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow|decoration|caret|accent";
 const PALETTE_CLASS =
   /\b(?:bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)\b|\b(?:bg|text|border|ring|fill|stroke)-(?:black|white)\b/;
+// R3: an arbitrary value is not a semantic token when it embeds a color literal
+// (`bg-[#ff0000]`). `var(--…)` and gradients over tokens stay allowed.
+const ARBITRARY_COLOR = new RegExp(
+  String.raw`\b(?:${COLOR_UTILITY})-\[[^\]]*(?:#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|oklch?\(|oklab\(|lab\(|lch\()`,
+);
+// R3: a numeric shade on a palette Tailwind does not define (`bg-night-900`)
+// is a hand-rolled palette; semantic tokens carry no numeric scale.
+const UNKNOWN_PALETTE = new RegExp(
+  String.raw`\b(?:${COLOR_UTILITY})-(?!(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-)[a-z][a-z0-9]*(?:-[a-z0-9]+)*-(?:50|[1-9]00|950)\b`,
+);
 const OFF_SCALE_SPACING =
-  /(?:^|[\s"'`])(?:rounded-(?:xl|2xl|3xl)|(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y|h|w|size|z)-\[)/;
+  /(?:^|[\s"'`])(?:rounded-(?:xl|2xl|3xl|\[)|(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y|h|w|size|z)-\[)/;
 const LOADING_BRANCH = /(?:isLoading|loading|isPending|isFetching|isSubmitting|isSaving|isDeleting|isUpdating)$/;
 // Punctuation that carries no translation; shared by the host and framework
 // scopes so the two R7 rule sets cannot drift.
 const R7_ALLOWED_STRINGS = ["·", "—", "–", "/", ":"];
 
+const PALETTE_MESSAGE =
+  "Use a semantic token (bg-primary, text-muted-foreground, ...) or chart-palette instead of a raw Tailwind palette class (R3).";
+
+function paletteSyntax(source) {
+  return [
+    { selector: `Literal[value=/${source}/]`, message: PALETTE_MESSAGE },
+    { selector: `TemplateElement[value.raw=/${source}/]`, message: PALETTE_MESSAGE },
+  ];
+}
+
 const PALETTE_SYNTAX = [
-  {
-    selector: `Literal[value=/${PALETTE_CLASS.source}/]`,
-    message:
-      "Use a semantic token (bg-primary, text-muted-foreground, ...) or chart-palette instead of a raw Tailwind palette class (R3).",
-  },
-  {
-    selector: `TemplateElement[value.raw=/${PALETTE_CLASS.source}/]`,
-    message:
-      "Use a semantic token (bg-primary, text-muted-foreground, ...) or chart-palette instead of a raw Tailwind palette class (R3).",
-  },
+  ...paletteSyntax(PALETTE_CLASS.source),
+  ...paletteSyntax(ARBITRARY_COLOR.source),
+  ...paletteSyntax(UNKNOWN_PALETTE.source),
 ];
 
 // Colors set through inline styles bypass the className scan entirely (R1-15).
@@ -192,9 +207,10 @@ export const frameworkLintConfig = [
               message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
             },
             {
-              group: ["@/app/*", "@/features/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*", "@/modules/*"],
+              group: ["@/app/*", "@/features/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*"],
               message: MODULE_BOUNDARY_MESSAGE,
             },
+            { group: ["@/components/*", "!@/components/ui"], message: MODULE_BOUNDARY_MESSAGE },
             { group: ["@/lib/*", "!@/lib/utils"], message: MODULE_BOUNDARY_MESSAGE },
           ],
         },

@@ -132,3 +132,25 @@ export function isTrustedApiTarget(url: string | undefined, baseUrl: string | un
     return false;
   }
 }
+
+/**
+ * Whether the request belongs to the auth flow itself (`AUTH_PATH_PATTERN`).
+ *
+ * The exemption is a path rule, so it must be judged on the resolved pathname:
+ * a same-origin absolute URL (`https://host/auth/login`) used to fall through
+ * and be treated as a business request, attaching a stale bearer and entering
+ * the refresh/replay chain (R83-21). Cross-origin targets are already refused
+ * by `isTrustedApiTarget`.
+ */
+export function isAuthPath(url: string | undefined): boolean {
+  const raw = url ?? "";
+  // A relative target is already a path; `baseURL` is applied later by axios,
+  // so prefixing it here would turn `/auth/x` into `/api/auth/x` and lose the
+  // exemption.
+  if (!ABSOLUTE_URL_PATTERN.test(raw)) return AUTH_PATH_PATTERN.test(raw.split(/[?#]/, 1)[0]);
+  try {
+    return AUTH_PATH_PATTERN.test(new URL(raw, pageOrigin()).pathname);
+  } catch {
+    return AUTH_PATH_PATTERN.test(raw);
+  }
+}

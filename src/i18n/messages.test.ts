@@ -17,7 +17,18 @@ test("framework.common carries the keys shared components read", () => {
   // DatePicker and ConfirmDialog resolve this namespace, so a missing key
   // breaks the framework surface in every host that adopts it.
   const keys = Object.keys(loadFrameworkMessages("en").common);
-  for (const key of ["done", "clear", "selectDate", "selectDateTime", "hour", "minute"]) {
+  for (const key of [
+    "done",
+    "clear",
+    "selectDate",
+    "selectDateTime",
+    "hour",
+    "minute",
+    "chartLine",
+    "chartBar",
+    "chartPie",
+    "chartDoughnut",
+  ]) {
     assert.ok(keys.includes(key), `framework.common.${key} is missing`);
   }
 });

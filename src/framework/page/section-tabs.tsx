@@ -1,7 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "cn";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -25,6 +26,11 @@ export default function SectionTabs({
   className?: string;
 }) {
   const pathname = usePathname() ?? "";
+  const router = useRouter();
+  // A mouse/Enter click goes through the Link, which already navigates. The
+  // flag lets `onValueChange` skip that duplicate push while still handling
+  // keyboard tab selection, which never clicks the anchor (R82-20).
+  const navigatedByLink = useRef(false);
   // A nested route (e.g. /modules/history) also prefix-matches its parent tab
   // (/modules), so the most specific matching href must win. A route outside
   // the tab set leaves no tab active rather than falsely marking the first one.
@@ -34,11 +40,28 @@ export default function SectionTabs({
       .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? "";
 
   return (
-    <Tabs value={activeHref} className={cn(className)}>
+    <Tabs
+      value={activeHref}
+      onValueChange={(href) => {
+        if (navigatedByLink.current) {
+          navigatedByLink.current = false;
+          return;
+        }
+        router.push(href);
+      }}
+      className={cn(className)}
+    >
       <TabsList aria-label={ariaLabel}>
         {items.map((item) => (
           <TabsTrigger key={item.href} value={item.href} asChild>
-            <Link href={item.href}>{item.label}</Link>
+            <Link
+              href={item.href}
+              onClick={() => {
+                navigatedByLink.current = true;
+              }}
+            >
+              {item.label}
+            </Link>
           </TabsTrigger>
         ))}
       </TabsList>

@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConfirmProvider } from "@/framework/feedback/confirm-dialog";
+import { ApiErrorToast } from "@/framework/feedback/api-error-toast";
 import { NavigationProgressProvider } from "@/framework/feedback/navigation-progress";
 import { ThemeProvider } from "@/framework/theme/theme-provider";
 import { normalizeTheme, THEME_COOKIE, type ThemePreference } from "@/framework/theme/theme";
@@ -36,9 +37,13 @@ const geistMono = localFont({
   display: "swap",
 });
 
+// The root layout is framework-owned, so hosts cannot edit these strings.
+// They come from build-time environment variables with a neutral fallback
+// instead of hard-coding the template name into every product page (R83-20).
+// NEXT_PUBLIC_* values are inlined by `next build`, so set them before building.
 export const metadata: Metadata = {
-  title: "fewbie",
-  description: "Basic template: Next.js App Router + Tailwind CSS + shadcn/ui",
+  title: process.env.NEXT_PUBLIC_APP_NAME ?? "fewbie",
+  description: process.env.NEXT_PUBLIC_APP_DESCRIPTION ?? "Next.js App Router application",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -72,8 +77,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 </TooltipProvider>
               </NavigationProgressProvider>
             </ConfirmProvider>
+            {/* Inside ThemeProvider so the toast can follow the active theme;
+                outside HostProviders so a host re-mounting its tree never drops
+                the api-client error subscription (R82-17, R82-21). */}
+            <ApiErrorToast />
+            <Toaster
+              position="top-right"
+              duration={2000}
+              theme={theme === "DARK" ? "dark" : theme === "LIGHT" ? "light" : "system"}
+            />
           </ThemeProvider>
-          <Toaster position="top-right" duration={2000} />
         </NextIntlClientProvider>
       </body>
     </html>

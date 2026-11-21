@@ -17,6 +17,10 @@
     "selectDateTime": "Select date and time",
     "clear": "Clear",
     "hour": "Hour",
-    "minute": "Minute"
+    "minute": "Minute",
+    "chartLine": "Line chart",
+    "chartBar": "Bar chart",
+    "chartPie": "Pie chart",
+    "chartDoughnut": "Doughnut chart"
   }
 }

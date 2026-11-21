@@ -34,8 +34,8 @@ export interface ConfirmOptions {
   // Disable the confirm button, e.g. for actions the product does not
   // support yet while still showing the explanatory dialog.
   disableConfirmButton?: boolean;
-  // Disable the close-on-outside-click and escape key (defaults to true so
-  // accidental dismissals don't lose user intent).
+  // Disable the close-on-outside-click and escape key. Defaults to false: the
+  // dialog stays dismissible unless the caller explicitly locks it.
   disableCloseOnDismiss?: boolean;
   // Require the user to type the exact `expected` text before the confirm
   // button becomes clickable. Used for irreversible deletes where the target
@@ -133,6 +133,10 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
     : (open: boolean) => {
         if (!open) handleCancel();
       };
+  // A cancel button is the only close affordance a Radix AlertDialog has. Hiding
+  // it while the confirm action is disabled used to leave the dialog with no way
+  // out at all (R82-18); the fallback keeps one escape hatch.
+  const showCancel = !options.hideCancelButton || isConfirmDisabled;
 
   return (
     <ConfirmContext.Provider value={{ confirm }}>
@@ -140,7 +144,9 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
       <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{options.title}</AlertDialogTitle>
+            {/* AlertDialogTitle must not be empty: Radix warns about a dialog
+                without an accessible name (R82-18). */}
+            <AlertDialogTitle>{options.title ?? t("confirm")}</AlertDialogTitle>
             {body ? (
               <AlertDialogDescription asChild>
                 <div>{body}</div>
@@ -163,9 +169,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
             </div>
           ) : null}
           <AlertDialogFooter>
-            {!options.hideCancelButton ? (
-              <AlertDialogCancel onClick={handleCancel}>{cancellationText}</AlertDialogCancel>
-            ) : null}
+            {showCancel ? <AlertDialogCancel onClick={handleCancel}>{cancellationText}</AlertDialogCancel> : null}
             <AlertDialogAction
               onClick={handleConfirm}
               disabled={isConfirmDisabled}

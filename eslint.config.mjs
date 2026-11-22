@@ -18,25 +18,33 @@ import next from "@devbie/style-guide/eslint/next";
  * scale contract. Copy-level rules (R2/R7/R11) remain host-only, because the
  * shared state components and their labels are what host code is told to reuse.
  */
-const HOST_CODE = ["src/app/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"];
+const HOST_CODE = [
+  "src/app/**/*.{ts,tsx}",
+  "src/features/**/*.{ts,tsx}",
+  "src/widgets/**/*.{ts,tsx}",
+  "src/components/**/*.{ts,tsx}",
+];
 const FRAMEWORK_CODE = ["src/framework/**/*.{ts,tsx}"];
-// Registry items and host features share `src/features/**` (ADR-065), so item
-// identity comes from the install record instead of a directory prefix. The
-// lockfile lists every installed file; a host without one has no items.
+// Registry items land in `src/features/**` and `src/widgets/**` (ADR-066) next
+// to host code, so item identity comes from the install record instead of a
+// directory prefix. The lockfile lists every installed file; a host without one
+// has no items.
 const LOCKFILE = new URL("./fewbie.lock.json", import.meta.url);
 const FEATURE_PREFIX = "src/features/";
+const WIDGET_PREFIX = "src/widgets/";
 const MODULE_BOUNDARY_MESSAGE =
   "A registry item may import React, @/components/ui/*, @/lib/utils, its own files and the sibling items installed " +
   "next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
 /**
- * Files the lockfile records as feature-slice items. `registry:block` items are
- * written to `src/features/**`; `registry:component` items keep living in
- * `src/components/**` and stay under the host component rules, because they are
- * host-coupled shells by design. Copy-assembled items may only depend on the
- * framework surface and other installed items, so transport, i18n, router,
+ * Files the lockfile records as installed items: `registry:feature` slices under
+ * `src/features/**` and `registry:widget` compositions under `src/widgets/**`.
+ * `registry:component` and `registry:lib` items keep living in
+ * `src/components/**` and `src/lib/**` and stay under the host rules, because
+ * they are shared payloads by design. Copy-assembled items may only depend on
+ * the framework surface and other installed items, so transport, i18n, router,
  * toast and state libraries stay in the host adapter that renders them
- * (ADR-057, ADR-062, ADR-065).
+ * (ADR-057, ADR-062, ADR-065, ADR-066).
  */
 function installedModuleFiles() {
   let lockfile;
@@ -48,7 +56,7 @@ function installedModuleFiles() {
   }
   return Object.values(lockfile.modules ?? {})
     .flatMap((module) => Object.keys(module.files ?? {}))
-    .filter((file) => file.startsWith(FEATURE_PREFIX));
+    .filter((file) => file.startsWith(FEATURE_PREFIX) || file.startsWith(WIDGET_PREFIX));
 }
 
 function escapeRegExp(value) {
@@ -218,78 +226,121 @@ export function createFrameworkLintConfig(moduleFiles) {
 }
 
 /**
- * Module boundary (ADR-057, ADR-065): a registry item is copied into the host
- * as-is, so it must compile against the framework surface plus the other
- * installed items alone.
+ * Module boundary (ADR-057, ADR-065, ADR-066): a registry item is copied into
+ * the host as-is, so it must compile against the framework surface plus the
+ * other installed items alone. Features and widgets are separate layers: a
+ * widget may compose installed features and widgets, a feature never reaches
+ * into `@/widgets/**`.
  */
 function moduleBoundaryConfig(moduleFiles) {
   if (moduleFiles.length === 0) return [];
 
-  const siblings = [
-    ...new Set(
-      moduleFiles
-        .filter((file) => file.startsWith(FEATURE_PREFIX))
-        .map((file) => file.slice(FEATURE_PREFIX.length).split("/")[0]),
-    ),
-  ];
-  // A registry item may import another installed item, but never the host's own
-  // feature that happens to sit in the same tree.
-  const hostFeatureImport = new RegExp(`^@/features/(?!(?:${siblings.map(escapeRegExp).join("|")})(?:/|$))`);
+  const featureFiles = moduleFiles.filter((file) => file.startsWith(FEATURE_PREFIX));
+  const widgetFiles = moduleFiles.filter((file) => file.startsWith(WIDGET_PREFIX));
+  const siblingsOf = (files, prefix) => [...new Set(files.map((file) => file.slice(prefix.length).split("/")[0]))];
 
-  return [
+  const featureSiblings = siblingsOf(featureFiles, FEATURE_PREFIX);
+  const widgetSiblings = siblingsOf(widgetFiles, WIDGET_PREFIX);
+
+  const blocks = [];
+  if (featureFiles.length > 0) {
+    blocks.push(moduleBoundaryBlock(featureFiles, { featureSiblings, widgetSiblings, forbidWidgets: true }));
+  }
+  if (widgetFiles.length > 0) {
+    blocks.push(moduleBoundaryBlock(widgetFiles, { featureSiblings, widgetSiblings, forbidWidgets: false }));
+  }
+  return blocks;
+}
+
+/**
+ * A registry item may import another installed item, but never the host's own
+ * slice that happens to sit in the same tree. With no installed sibling in that
+ * layer, every import from it is a host import.
+ */
+function hostItemImport(prefix, siblings) {
+  const escaped = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (siblings.length === 0) return new RegExp(`^${escaped}/`);
+  return new RegExp(`^${escaped}/(?!(?:${siblings.map(escapeRegExp).join("|")})(?:/|$))`);
+}
+
+function moduleBoundaryBlock(files, { featureSiblings, widgetSiblings, forbidWidgets }) {
+  const hostFeatureImport = hostItemImport("@/features", featureSiblings);
+  const hostWidgetImport = hostItemImport("@/widgets", widgetSiblings);
+  const patterns = [
     {
-      files: moduleFiles,
-      rules: {
-        "no-restricted-globals": [
-          "error",
-          { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
-          { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
-        ],
-        "no-restricted-imports": [
-          "error",
-          {
-            patterns: [
-              {
-                group: ["next", "next/*", "next-intl", "next-intl/*"],
-                message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
-              },
-              {
-                group: ["axios", "@tanstack/*", "swr", "sonner", "@radix-ui/*"],
-                message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
-              },
-              {
-                group: ["@/app/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*"],
-                message: MODULE_BOUNDARY_MESSAGE,
-              },
-              { group: ["@/components/*", "!@/components/ui"], message: MODULE_BOUNDARY_MESSAGE },
-              { group: ["@/lib/*", "!@/lib/utils"], message: MODULE_BOUNDARY_MESSAGE },
-            ],
-          },
-        ],
-        "no-restricted-syntax": [
-          "error",
-          {
-            selector: `ImportDeclaration[source.value=/${hostFeatureImport.source}/]`,
-            message: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host feature.`,
-          },
-          {
-            selector: `ImportExpression[source.value=/${hostFeatureImport.source}/]`,
-            message: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host feature.`,
-          },
-          {
-            selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
-            message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
-          },
-          {
-            selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr|@tanstack\\/.*)$/]",
-            message: MODULE_BOUNDARY_MESSAGE,
-          },
-        ],
-        // R7: an item has no i18n of its own; copy arrives through labels.
-        "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
-      },
+      group: ["next", "next/*", "next-intl", "next-intl/*"],
+      message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
+    },
+    {
+      group: ["axios", "@tanstack/*", "swr", "sonner", "@radix-ui/*"],
+      message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
+    },
+    {
+      group: ["@/app/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*"],
+      message: MODULE_BOUNDARY_MESSAGE,
+    },
+    { group: ["@/components/*", "!@/components/ui"], message: MODULE_BOUNDARY_MESSAGE },
+    { group: ["@/lib/*", "!@/lib/utils"], message: MODULE_BOUNDARY_MESSAGE },
+  ];
+  if (forbidWidgets) {
+    patterns.push({
+      group: ["@/widgets/*"],
+      message: `${MODULE_BOUNDARY_MESSAGE} Widgets compose features, never the reverse.`,
+    });
+  }
+
+  const syntax = [
+    {
+      selector: `ImportDeclaration[source.value=/${hostFeatureImport.source}/]`,
+      message: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host feature.`,
+    },
+    {
+      selector: `ImportExpression[source.value=/${hostFeatureImport.source}/]`,
+      message: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host feature.`,
+    },
+    {
+      selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
+      message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
+    },
+    {
+      selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr|@tanstack\\/.*)$/]",
+      message: MODULE_BOUNDARY_MESSAGE,
     },
   ];
+  if (!forbidWidgets) {
+    syntax.push(
+      {
+        selector: `ImportDeclaration[source.value=/${hostWidgetImport.source}/]`,
+        message: `${MODULE_BOUNDARY_MESSAGE} Import another installed widget, not a host widget.`,
+      },
+      {
+        selector: `ImportExpression[source.value=/${hostWidgetImport.source}/]`,
+        message: `${MODULE_BOUNDARY_MESSAGE} Import another installed widget, not a host widget.`,
+      },
+    );
+  } else {
+    // no-restricted-imports does not see dynamic imports, and the direction rule
+    // bans every widget import, not just host ones.
+    syntax.push({
+      selector: "ImportExpression[source.value=/^@\\/widgets\\//]",
+      message: `${MODULE_BOUNDARY_MESSAGE} Widgets compose features, never the reverse.`,
+    });
+  }
+
+  return {
+    files,
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+        { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+      ],
+      "no-restricted-imports": ["error", { patterns }],
+      "no-restricted-syntax": ["error", ...syntax],
+      // R7: an item has no i18n of its own; copy arrives through labels.
+      "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
+    },
+  };
 }
 
 export const frameworkLintConfig = createFrameworkLintConfig(installedModuleFiles());

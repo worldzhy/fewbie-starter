@@ -1,10 +1,10 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "fc19360f6b7e20d9f7dacb7322746a2c6d44f0bdad0284cb5727a2630a66d38e",
+  "digest": "dd34dc93a087c1664a2d9b4f59c5b9a170d0e5cd84c42fc3342aac52ef619403",
   "files": {
     "components.json": "a7720c54d6a109d6063937fac1c7766c44a1020cdbe43eb489ca2cb126fbbaa9",
-    "eslint.config.mjs": "f9699581ee3aadb59bdf83532588b772afdc1803ca36c1c117edfc2f1f3042dc",
+    "eslint.config.mjs": "866338d54b01e1d4679148ad78e0676af451e10a395c1c266bd00599a39822e2",
     "next.config.framework.ts": "b03a93c15932b3cc29cb0844b0773d207a2198ad91f2669f4f3cf26da457d643",
     "postcss.config.mjs": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
     "scripts/check-framework-adr.mjs": "6ecb672363a5c3514171eaa7f1315d6a20f6fad9bf5469527bbf8759cddb9e62",
@@ -12,7 +12,7 @@
     "scripts/check-page-contract.mjs": "76d1f9a7e4502ac3b6e04b9e466b47f65ed28c05be4f7e49c4174acd42d5cf1f",
     "scripts/check-primitives.mjs": "ad53024379096c7ef5ea097a1e1743032bdf7a0e58751af8e511110afb0567a9",
     "scripts/check-route-conventions.mjs": "6142224360b1776df1914b6cc5e799e29e1f89f76030a6472beb0bbce1018f13",
-    "scripts/eslint-rules.test.mjs": "53c449f6c469098921008a2a962e6ccc52b9bc949b3f30f1e43f8cb77491e59b",
+    "scripts/eslint-rules.test.mjs": "d9de87754ccb023158b391ad823d04dd8c9b23f38180aa8f0faf4e927f850837",
     "scripts/gates.test.mjs": "7af455bfad1b4ff205ce5df12fb0a413b2b7933f80f0ec7aea268073ae363e4a",
     "scripts/lib/walk.mjs": "5410ace36a4f81af89916f1d99e543dfd3c0ca1b470dcea5279fabb2397bebd3",
     "src/app/fonts/geist-mono-latin.woff2": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b",

@@ -8,12 +8,15 @@
 # their updates are verified at the following dev -> main PR.
 name: CI
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: [main]
   push:
     # Direct pushes to dev used to be ungated until the next dev -> main PR
-    # (R1-22). The `guards` job covers them without the build and image cost.
+    # (R1-22). The `guards` job covers them without the image cost.
     branches: [dev]
   workflow_dispatch:
 

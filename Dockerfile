@@ -6,7 +6,7 @@
 # set them with `docker build --build-arg NEXT_PUBLIC_BASE_URL=...`. At runtime
 # they cannot be changed — rebuild the image instead.
 
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -27,7 +27,7 @@ ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL \
 # created here so hosts that add public assets always have a copy source.
 RUN mkdir -p public && npm run build
 
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     # Next.js standalone server: copy it out of the build stage's output tree.
@@ -36,6 +36,10 @@ ENV NODE_ENV=production \
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
+# The standalone server writes its ISR/fetch cache at runtime; the image runs as
+# the unprivileged `node` user (R87-16).
+RUN mkdir -p .next/cache && chown -R node:node /app
+USER node
 
 EXPOSE 3000
 CMD ["node", "server.js"]

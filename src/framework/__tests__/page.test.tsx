@@ -4,8 +4,8 @@ import assert from "node:assert/strict";
 import { afterEach, describe, test } from "node:test";
 import { cleanup, render, screen } from "@testing-library/react";
 
-import PageHeader from "../../framework/page/page-header";
-import PageShell, { PageShellActions } from "../../framework/page/page-shell";
+import PageHeader from "../page/page-header";
+import PageShell, { PageShellActions } from "../page/page-shell";
 
 afterEach(cleanup);
 

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import path from "node:path";
 
 import base from "@devbie/style-guide/eslint/base";
 import next from "@devbie/style-guide/eslint/next";
@@ -54,9 +55,23 @@ function installedModuleFiles() {
     if (error.code === "ENOENT") return [];
     throw error;
   }
-  return Object.values(lockfile.modules ?? {})
-    .flatMap((module) => Object.keys(module.files ?? {}))
-    .filter((file) => file.startsWith(FEATURE_PREFIX) || file.startsWith(WIDGET_PREFIX));
+  const modules = lockfile.modules;
+  if (modules === undefined) return [];
+  // A malformed lockfile used to yield zero boundary rules and pass silently,
+  // which is the same as skipping the gate (R87-19).
+  if (modules === null || typeof modules !== "object" || Array.isArray(modules)) {
+    throw new Error("fewbie.lock.json is malformed: `modules` must be an object. Run `npx fewbie modules update`.");
+  }
+  return Object.values(modules).flatMap((module) => {
+    if (module === null || typeof module !== "object" || Array.isArray(module)) {
+      throw new Error("fewbie.lock.json is malformed: every module entry must be an object.");
+    }
+    const files = module.files ?? {};
+    if (files === null || typeof files !== "object" || Array.isArray(files)) {
+      throw new Error("fewbie.lock.json is malformed: every module `files` must be an object.");
+    }
+    return Object.keys(files).filter((file) => file.startsWith(FEATURE_PREFIX) || file.startsWith(WIDGET_PREFIX));
+  });
 }
 
 function escapeRegExp(value) {
@@ -226,6 +241,62 @@ export function createFrameworkLintConfig(moduleFiles) {
 }
 
 /**
+ * `no-restricted-imports` compares the specifier text, so a relative path
+ * reaches a banned layer without naming it (`../../widgets/copilot`). This rule
+ * resolves the specifier against the importing file and applies the same
+ * boundary (R87-03).
+ */
+const moduleBoundaryPlugin = {
+  rules: {
+    "relative-item-boundary": {
+      meta: {
+        type: "problem",
+        schema: [
+          {
+            type: "object",
+            properties: {
+              allowedRoots: { type: "array", items: { type: "string" } },
+              forbidWidgets: { type: "boolean" },
+            },
+            required: ["allowedRoots"],
+            additionalProperties: false,
+          },
+        ],
+        messages: {
+          widget: `${MODULE_BOUNDARY_MESSAGE} Widgets compose features, never the reverse.`,
+          outside: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host file.`,
+        },
+      },
+      create(context) {
+        const [{ allowedRoots, forbidWidgets }] = context.options;
+        const projectRoot = context.cwd ?? process.cwd();
+        // ESLint may hand the rule a cwd-relative filename; resolving it against
+        // the project root keeps the comparison on one basis.
+        const filename = path.isAbsolute(context.filename)
+          ? context.filename
+          : path.join(projectRoot, context.filename);
+        const fileDirectory = path.dirname(filename);
+        const widgetRoot = path.join(projectRoot, WIDGET_PREFIX);
+        const roots = allowedRoots.map((root) => path.join(projectRoot, root));
+        const within = (target, root) =>
+          target === root || target.startsWith(root.endsWith(path.sep) ? root : root + path.sep);
+        const check = (node) => {
+          const specifier = node.source?.value;
+          if (typeof specifier !== "string" || !specifier.startsWith(".")) return;
+          const target = path.resolve(fileDirectory, specifier);
+          if (forbidWidgets && within(target, widgetRoot)) {
+            context.report({ node, messageId: "widget" });
+            return;
+          }
+          if (!roots.some((root) => within(target, root))) context.report({ node, messageId: "outside" });
+        };
+        return { ImportDeclaration: check, ImportExpression: check };
+      },
+    },
+  },
+};
+
+/**
  * Module boundary (ADR-057, ADR-065, ADR-066): a registry item is copied into
  * the host as-is, so it must compile against the framework surface plus the
  * other installed items alone. Features and widgets are separate layers: a
@@ -329,7 +400,20 @@ function moduleBoundaryBlock(files, { featureSiblings, widgetSiblings, forbidWid
 
   return {
     files,
+    plugins: { "module-boundary": moduleBoundaryPlugin },
     rules: {
+      "module-boundary/relative-item-boundary": [
+        "error",
+        {
+          allowedRoots: [
+            ...featureSiblings.map((name) => `${FEATURE_PREFIX}${name}`),
+            ...widgetSiblings.map((name) => `${WIDGET_PREFIX}${name}`),
+            "src/components/ui",
+            "src/lib/utils",
+          ],
+          forbidWidgets,
+        },
+      ],
       "no-restricted-globals": [
         "error",
         { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },

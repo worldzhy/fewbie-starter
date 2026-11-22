@@ -5,9 +5,9 @@ import { afterEach, describe, test } from "node:test";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { EmptyState } from "../../framework/states/empty-state";
-import { ErrorState } from "../../framework/states/error-state";
-import { LoadingState } from "../../framework/states/loading-state";
+import { EmptyState } from "../states/empty-state";
+import { ErrorState } from "../states/error-state";
+import { LoadingState } from "../states/loading-state";
 
 afterEach(cleanup);
 

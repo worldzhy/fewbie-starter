@@ -5,8 +5,8 @@ import { afterEach, describe, test } from "node:test";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { InlineErrorText } from "../../framework/feedback/inline-error-text";
-import { InlineResult } from "../../framework/feedback/inline-result";
+import { InlineErrorText } from "../feedback/inline-error-text";
+import { InlineResult } from "../feedback/inline-result";
 
 afterEach(cleanup);
 

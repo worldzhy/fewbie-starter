@@ -224,8 +224,10 @@ test("R11 rejects an inline query-key literal", async () => {
 });
 
 const LOGIN_PAGE = "src/features/login-page/login-page.tsx";
-// What the lockfile would record for a host that installed both items.
-const INSTALLED_ITEMS = [LOGIN_PAGE, "src/features/password-checklist/index.ts"];
+const NOTIFICATION_WIDGET = "src/widgets/notification-center/notification-center.tsx";
+const COPILOT_WIDGET = "src/widgets/copilot/index.ts";
+// What the lockfile would record for a host that installed both layers.
+const INSTALLED_ITEMS = [LOGIN_PAGE, "src/features/password-checklist/index.ts", NOTIFICATION_WIDGET, COPILOT_WIDGET];
 
 test("registry items may only reach the framework surface and installed items", async () => {
   const allowed = await lintFixture(
@@ -279,6 +281,60 @@ test("registry items cannot fetch on their own", async () => {
     INSTALLED_ITEMS,
   );
   assert.ok(errors(memberFetch, "no-restricted-syntax").length >= 1);
+});
+
+test("widgets may compose installed features and widgets", async () => {
+  const allowed = await lintFixture(
+    {
+      [NOTIFICATION_WIDGET]: `
+      import { Button } from "@/components/ui/button";
+      import { LoginPage } from "@/features/login-page";
+      import { Copilot } from "@/widgets/copilot";
+      export function NotificationCenter({ label }: { label: string }) {
+        return <Button onClick={() => [LoginPage, Copilot]}>{label}</Button>;
+      }
+    `,
+    },
+    INSTALLED_ITEMS,
+  );
+  assert.deepEqual(errors(allowed), []);
+});
+
+test("features never import widgets", async () => {
+  const messages = await lintFixture(
+    { [LOGIN_PAGE]: 'import { Copilot } from "@/widgets/copilot";\nexport const value = Copilot;' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(messages, "no-restricted-imports").some((message) => message.text.includes("never the reverse")));
+
+  const dynamic = await lintFixture(
+    { [LOGIN_PAGE]: 'export const load = () => import("@/widgets/copilot");' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(dynamic, "no-restricted-syntax").some((message) => message.text.includes("never the reverse")));
+});
+
+test("widgets may not reach host slices in either layer", async () => {
+  const hostFeature = await lintFixture(
+    { [NOTIFICATION_WIDGET]: 'import { load } from "@/features/user/api";\nexport const value = load;' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(hostFeature, "no-restricted-syntax").some((message) => message.text.includes("not a host feature")));
+
+  const hostWidget = await lintFixture(
+    { [NOTIFICATION_WIDGET]: 'import { load } from "@/widgets/host-dock";\nexport const value = load;' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(hostWidget, "no-restricted-syntax").some((message) => message.text.includes("not a host widget")));
+
+  // With no installed feature, every `@/features/*` import is a host import.
+  const noFeatureSiblings = await lintFixture(
+    { [NOTIFICATION_WIDGET]: 'import { load } from "@/features/user/api";\nexport const value = load;' },
+    [NOTIFICATION_WIDGET],
+  );
+  assert.ok(
+    errors(noFeatureSiblings, "no-restricted-syntax").some((message) => message.text.includes("not a host feature")),
+  );
 });
 
 test("framework-owned primitives stay outside the host gates", async () => {

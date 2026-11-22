@@ -45,7 +45,8 @@ async function loadFrameworkMessages(locale: Locale): Promise<Record<string, unk
 //
 // No routing middleware is used: next-intl's middleware rewrites requests to
 // an internal `/{locale}/...` path that a flat route tree cannot serve. The
-// locale is resolved from the cookie written by LocaleSwitcher.
+// locale is resolved from the NEXT_LOCALE cookie (see `LOCALE_COOKIE`); mount
+// `src/components/locale-switcher.tsx` in the host header to write it.
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
   const cookieLocale = (await cookies()).get(LOCALE_COOKIE)?.value;

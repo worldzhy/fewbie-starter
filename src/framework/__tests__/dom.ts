@@ -3,10 +3,9 @@ import { JSDOM } from "jsdom";
 /**
  * jsdom bootstrap for the framework rendering tests.
  *
- * These tests live in the repository root `test/` tree, outside the template
- * payload, so `fewbie template update` never ships them and existing hosts do
- * not need the extra devDependencies. They protect the framework files before
- * a template release distributes a regression.
+ * These tests are framework-owned: they live under `src/framework/**`, appear
+ * in `.fewbie/framework.json`, and `fewbie template update` keeps them in sync
+ * with the implementation they cover.
  */
 const dom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "http://localhost:3000",

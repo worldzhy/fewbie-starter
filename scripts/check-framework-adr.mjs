@@ -22,7 +22,6 @@ export const FRAMEWORK_PATHS = [
   "src/app/globals.css",
   "src/app/fonts/",
   "src/i18n/config.ts",
-  "src/i18n/request.ts",
   "src/i18n/messages/framework.",
   "src/instrumentation.ts",
   "src/lib/utils.ts",

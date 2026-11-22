@@ -39,10 +39,16 @@ Without them the hook is a no-op.
 
 ## Web monitor (optional, browser side)
 
-`src/components/frontend-monitor.tsx` is mounted in the root layout. It dynamically
-imports `@devbie/frontend-monitor-sdk` in the browser (kept out of SSR/Edge) and
-reports page views, AJAX, resources and errors when both env vars are set
-(see `.env.example`):
+The monitor is a registry item, not part of the skeleton. Install it, then mount
+the component in your own layout or provider:
+
+```bash
+npx fewbie modules add frontend-monitor-sdk
+```
+
+`frontend-monitor.tsx` dynamically imports `@devbie/frontend-monitor-sdk` in the
+browser (kept out of SSR/Edge) and reports page views, AJAX, resources and errors
+when both env vars are set (see `.env.example`):
 
 - `NEXT_PUBLIC_FRONTEND_MONITOR_ENDPOINT` — report endpoint URL
 - `NEXT_PUBLIC_FRONTEND_MONITOR_TOKEN` — report token (identifies the application)
@@ -50,3 +56,9 @@ reports page views, AJAX, resources and errors when both env vars are set
 `NEXT_PUBLIC_` values are inlined at build time, so set them before
 `next build`, not only at runtime. Without both the component is a no-op
 (it warns in development only).
+
+## Language switcher
+
+`src/components/locale-switcher.tsx` is a reference control for the
+`NEXT_LOCALE` cookie; it is not mounted by the skeleton. Add it to your header
+if the host ships more than one locale.

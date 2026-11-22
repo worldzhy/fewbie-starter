@@ -211,7 +211,7 @@ button,
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #c9cdd4 transparent;
+  scrollbar-color: var(--border) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -224,7 +224,7 @@ button,
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #c9cdd4;
+  background-color: var(--border);
   border-radius: 3px;
 }
 

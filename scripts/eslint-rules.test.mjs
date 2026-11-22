@@ -337,6 +337,38 @@ test("widgets may not reach host slices in either layer", async () => {
   );
 });
 
+test("R87-03 resolves relative imports before applying the boundary", async () => {
+  // A relative path names the same layer without naming it: the alias rules
+  // never see it, so the boundary must be judged on the resolved target.
+  const messages = await lintFixture(
+    {
+      "src/features/shop/shop.tsx": 'import { dock } from "../../widgets/copilot/copilot";\nexport const page = dock;',
+      "src/widgets/copilot/copilot.tsx": 'import { page } from "../../features/shop/shop";\nexport const dock = page;',
+    },
+    ["src/features/shop/shop.tsx", "src/widgets/copilot/copilot.tsx"],
+  );
+  const violations = errors(messages, "module-boundary/relative-item-boundary");
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0].file, "src/features/shop/shop.tsx");
+  assert.ok(violations[0].text.includes("never the reverse"));
+
+  const hostReach = await lintFixture(
+    { "src/features/shop/shop.tsx": "import { label } from '../../app/labels';\nexport const page = label;" },
+    ["src/features/shop/shop.tsx"],
+  );
+  assert.ok(
+    errors(hostReach, "module-boundary/relative-item-boundary").some((message) =>
+      message.text.includes("not a host file"),
+    ),
+  );
+
+  const inside = await lintFixture(
+    { "src/features/shop/shop.tsx": 'import { t } from "./labels";\nexport const page = t;' },
+    ["src/features/shop/shop.tsx"],
+  );
+  assert.deepEqual(errors(inside, "module-boundary/relative-item-boundary"), []);
+});
+
 test("framework-owned primitives stay outside the host gates", async () => {
   const messages = await lintFixture({
     "src/components/ui/legacy.tsx":

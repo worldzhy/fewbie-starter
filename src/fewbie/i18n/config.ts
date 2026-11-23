@@ -26,7 +26,7 @@ const LOCALE_COOKIE = "NEXT_LOCALE";
  */
 async function loadFrameworkMessages(locale: Locale): Promise<Record<string, unknown>> {
   try {
-    return (await import(`./messages/framework.${locale}.json`)).default;
+    return (await import(`@/i18n/messages/framework.${locale}.json`)).default;
   } catch (error) {
     const code = (error as { code?: string } | null)?.code;
     if (code === "MODULE_NOT_FOUND" || code === "ERR_MODULE_NOT_FOUND") {
@@ -61,7 +61,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // Host copy and framework copy are separate files so `template update` can
   // own the framework namespace without touching host messages. The framework
   // namespace wins on a collision (ADR-056 D8).
-  const hostMessages = (await import(`./messages/${locale}.json`)).default;
+  const hostMessages = (await import(`@/i18n/messages/${locale}.json`)).default;
   const frameworkMessages = await loadFrameworkMessages(locale);
 
   return {

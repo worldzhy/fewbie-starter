@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ApiError, AUTH_FAILURE_CODES, classifyFailure, isRefreshable } from "../../lib/api-client/failure";
+import { ApiError, AUTH_FAILURE_CODES, classifyFailure, isRefreshable } from "@/lib/api-client/failure";
 
 test("classifyFailure follows the ADR-048 order", () => {
   // 1. No response is a network failure, not a server error.

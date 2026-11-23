@@ -13,41 +13,28 @@ import next from "@devbie/style-guide/eslint/next";
  * rule set. R1/R5/R9/R10/R12 are scripts (see `scripts/`); the rules below are
  * the ones ESLint can express directly.
  *
- * File scopes are deliberate: `src/components/ui/**` are upstream primitives
- * and stay outside the gates, while `src/framework/**` is the reference
- * implementation host code copies, so it follows the same R3/R6 token and
- * scale contract. Copy-level rules (R2/R7/R11) remain host-only, because the
- * shared state components and their labels are what host code is told to reuse.
+ * File scopes are deliberate: `src/fewbie/ui/**` are upstream primitives and
+ * stay outside the gates, while `src/fewbie/framework/**` is the reference
+ * implementation host code copies, so it follows the same R3/R6 token and scale
+ * contract. Copy-level rules (R2/R7/R11) remain host-only, because the shared
+ * state components and their labels are what host code is told to reuse.
  */
-const HOST_CODE = [
-  "src/app/**/*.{ts,tsx}",
-  "src/features/**/*.{ts,tsx}",
-  "src/widgets/**/*.{ts,tsx}",
-  "src/components/**/*.{ts,tsx}",
-];
-const FRAMEWORK_CODE = ["src/framework/**/*.{ts,tsx}"];
-// Registry items land in `src/features/**` and `src/widgets/**` (ADR-066) next
-// to host code, so item identity comes from the install record instead of a
-// directory prefix. The lockfile lists every installed file; a host without one
-// has no items.
+const HOST_CODE = ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"];
+const FRAMEWORK_CODE = ["src/fewbie/framework/**/*.{ts,tsx}"];
+// Registry payload is item-first (ADR-070 D1), so both item identity and layer
+// come from the path: `src/items/<item>/<layer>/…`. The lockfile lists every
+// installed file; a host without one has no items.
 const LOCKFILE = new URL("./fewbie.lock.json", import.meta.url);
-const FEATURE_PREFIX = "src/features/";
-const WIDGET_PREFIX = "src/widgets/";
-const COMPONENT_PREFIX = "src/components/";
-const UI_PREFIX = "src/components/ui/";
+const ITEM_PREFIX = "src/items/";
 const MODULE_BOUNDARY_MESSAGE =
-  "A registry item may import React, @/components/ui/*, @/lib/utils, its own files and the sibling items installed " +
-  "next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
+  "A registry item may import React, @/fewbie/ui/*, @/lib/utils, @/lib/api-client, its own files and the sibling " +
+  "items installed next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
 /**
- * Files the lockfile records as installed items: `registry:feature` slices under
- * `src/features/**`, `registry:widget` compositions under `src/widgets/**` and
- * `registry:component` payloads under `src/components/**` (ADR-068).
- * `registry:lib` items keep living in `src/lib/**` and stay under the host rules,
- * because they are shared payloads by design. Copy-assembled items may only
+ * Files the lockfile records as installed items. Copy-assembled items may only
  * depend on the framework surface and other installed items, so transport, i18n,
  * router, toast and state libraries stay in the host adapter that renders them
- * (ADR-057, ADR-062, ADR-065, ADR-066).
+ * (ADR-057, ADR-062, ADR-069, ADR-070).
  */
 function installedModuleFiles() {
   let lockfile;
@@ -72,15 +59,17 @@ function installedModuleFiles() {
     if (files === null || typeof files !== "object" || Array.isArray(files)) {
       throw new Error("fewbie.lock.json is malformed: every module `files` must be an object.");
     }
-    return Object.keys(files).filter(
-      (file) => file.startsWith(FEATURE_PREFIX) || file.startsWith(WIDGET_PREFIX) || file.startsWith(COMPONENT_PREFIX),
-    );
+    return Object.keys(files).filter((file) => file.startsWith(ITEM_PREFIX));
   });
 }
 
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+/** Layers an item at `layer` may import from any installed item (ADR-069 D4). */
+const LAYER_IMPORTS = {
+  features: ["features", "components", "lib"],
+  widgets: ["features", "widgets", "components", "lib"],
+  components: ["components", "lib"],
+  lib: ["components", "lib"],
+};
 
 const COLOR_UTILITY = "bg|text|border|ring|from|to|via|fill|stroke|divide|outline|shadow|decoration|caret|accent";
 const PALETTE_CLASS =
@@ -148,7 +137,7 @@ export function createFrameworkLintConfig(moduleFiles) {
   return [
     {
       files: HOST_CODE,
-      ignores: [...moduleFiles, "src/components/ui/**"],
+      ignores: moduleFiles,
       rules: {
         // R4: transport goes through @/api or lib/api-client.
         "no-restricted-globals": [
@@ -190,12 +179,12 @@ export function createFrameworkLintConfig(moduleFiles) {
             message: "Render LoadingState/ErrorState/EmptyState instead of branching to inline state markup (R2).",
           },
           {
-            selector: 'ImportDeclaration[source.value="@/components/ui/skeleton"]',
-            message: "Use LoadingState from @/framework/states instead of the bare Skeleton primitive (R2).",
+            selector: 'ImportDeclaration[source.value="@/fewbie/ui/skeleton"]',
+            message: "Use LoadingState from @/fewbie/framework/states instead of the bare Skeleton primitive (R2).",
           },
           {
             selector: 'JSXOpeningElement[name.name="Loader2"]',
-            message: "Use LoadingState from @/framework/states instead of a page-local spinner (R2).",
+            message: "Use LoadingState from @/fewbie/framework/states instead of a page-local spinner (R2).",
           },
           // R4: one HTTP client. The global ban misses member calls and the import
           // ban misses a dynamic import.
@@ -225,7 +214,7 @@ export function createFrameworkLintConfig(moduleFiles) {
     },
     {
       files: HOST_CODE,
-      ignores: [...moduleFiles, "src/components/ui/**"],
+      ignores: moduleFiles,
       rules: {
         // R7: display copy lives in the host i18n message files.
         "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
@@ -245,54 +234,76 @@ export function createFrameworkLintConfig(moduleFiles) {
 }
 
 /**
- * `no-restricted-imports` compares the specifier text, so a relative path
- * reaches a banned layer without naming it (`../../widgets/copilot`). This rule
- * resolves the specifier against the importing file and applies the same
- * boundary (R87-03).
+ * A copy-assembled item is copied into the host as-is, so it must compile
+ * against the framework surface plus the other installed items alone. Item and
+ * layer both come from the file path (ADR-070 D1/D2), and the layer decides
+ * which layers it may import: a widget may compose features and widgets, a
+ * feature never reaches into a widget, and `components`/`lib` compose neither.
+ * The rule also sees relative and dynamic imports, which `no-restricted-imports`
+ * cannot compare by specifier text (R87-03).
  */
-const moduleBoundaryPlugin = {
+const itemBoundaryPlugin = {
   rules: {
-    "relative-item-boundary": {
+    "item-boundary": {
       meta: {
         type: "problem",
         schema: [
           {
             type: "object",
-            properties: {
-              allowedRoots: { type: "array", items: { type: "string" } },
-              forbidWidgets: { type: "boolean" },
-            },
-            required: ["allowedRoots"],
+            properties: { items: { type: "array", items: { type: "string" } } },
+            required: ["items"],
             additionalProperties: false,
           },
         ],
         messages: {
           widget: `${MODULE_BOUNDARY_MESSAGE} Widgets compose features, never the reverse.`,
-          outside: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host file.`,
+          direction: `${MODULE_BOUNDARY_MESSAGE} A shared layer composes no feature; pass data in through props.`,
+          unknown: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host file.`,
+          host: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host file.`,
         },
       },
       create(context) {
-        const [{ allowedRoots, forbidWidgets }] = context.options;
+        const [{ items }] = context.options;
+        const installed = new Set(items);
         const projectRoot = context.cwd ?? process.cwd();
-        // ESLint may hand the rule a cwd-relative filename; resolving it against
-        // the project root keeps the comparison on one basis.
         const filename = path.isAbsolute(context.filename)
           ? context.filename
           : path.join(projectRoot, context.filename);
-        const fileDirectory = path.dirname(filename);
-        const widgetRoot = path.join(projectRoot, WIDGET_PREFIX);
-        const roots = allowedRoots.map((root) => path.join(projectRoot, root));
-        const within = (target, root) =>
-          target === root || target.startsWith(root.endsWith(path.sep) ? root : root + path.sep);
-        const check = (node) => {
-          const specifier = node.source?.value;
-          if (typeof specifier !== "string" || !specifier.startsWith(".")) return;
-          const target = path.resolve(fileDirectory, specifier);
-          if (forbidWidgets && within(target, widgetRoot)) {
-            context.report({ node, messageId: "widget" });
+        const segments = path.relative(projectRoot, filename).split(path.sep);
+        const ownItem = segments[2];
+        const ownLayer = segments[3];
+        const allowed = LAYER_IMPORTS[ownLayer] ?? [];
+
+        const report = (node, layer) => {
+          const messageId = layer === "widgets" ? "widget" : "direction";
+          context.report({ node, messageId });
+        };
+        const checkLayer = (node, item, layer) => {
+          if (!installed.has(item)) {
+            context.report({ node, messageId: "unknown" });
             return;
           }
-          if (!roots.some((root) => within(target, root))) context.report({ node, messageId: "outside" });
+          if (!allowed.includes(layer)) report(node, layer);
+        };
+        const check = (node) => {
+          const specifier = node.source?.value;
+          if (typeof specifier !== "string") return;
+          if (specifier.startsWith("@/items/")) {
+            const [, , item, layer] = specifier.split("/");
+            checkLayer(node, item, layer);
+            return;
+          }
+          if (!specifier.startsWith(".")) return;
+          const target = path.resolve(path.dirname(filename), specifier);
+          const relative = path.relative(projectRoot, target).split(path.sep).join("/");
+          // Relative imports stay inside the item or reach the framework surface.
+          if (relative.startsWith("src/fewbie/")) return;
+          if (!relative.startsWith(`${ITEM_PREFIX}${ownItem}/`)) {
+            context.report({ node, messageId: "host" });
+            return;
+          }
+          const layer = relative.split("/")[3];
+          if (!allowed.includes(layer)) report(node, layer);
         };
         return { ImportDeclaration: check, ImportExpression: check };
       },
@@ -300,165 +311,69 @@ const moduleBoundaryPlugin = {
   },
 };
 
-/**
- * Module boundary (ADR-057, ADR-065, ADR-066, ADR-068): a registry item is
- * copied into the host as-is, so it must compile against the framework surface
- * plus the other installed items alone. Features and widgets are separate
- * layers: a widget may compose installed features and widgets, a feature never
- * reaches into `@/widgets/**`, and a component payload composes neither — it is
- * the shared layer the other two depend on.
- */
 function moduleBoundaryConfig(moduleFiles) {
   if (moduleFiles.length === 0) return [];
 
-  const featureFiles = moduleFiles.filter((file) => file.startsWith(FEATURE_PREFIX));
-  const widgetFiles = moduleFiles.filter((file) => file.startsWith(WIDGET_PREFIX));
-  // An installed component item is a registry payload, not host code; the
-  // framework primitives under `src/components/ui/**` are neither (ADR-068).
-  const componentFiles = moduleFiles.filter((file) => file.startsWith(COMPONENT_PREFIX) && !file.startsWith(UI_PREFIX));
-  const siblingsOf = (files, prefix) => [...new Set(files.map((file) => file.slice(prefix.length).split("/")[0]))];
-
-  const featureSiblings = siblingsOf(featureFiles, FEATURE_PREFIX);
-  const widgetSiblings = siblingsOf(widgetFiles, WIDGET_PREFIX);
-  const componentSiblings = siblingsOf(componentFiles, COMPONENT_PREFIX);
-  const siblings = { featureSiblings, widgetSiblings, componentSiblings };
-
-  const blocks = [];
-  if (featureFiles.length > 0) {
-    blocks.push(moduleBoundaryBlock(featureFiles, { ...siblings, forbidWidgets: true, forbidFeatures: false }));
-  }
-  if (widgetFiles.length > 0) {
-    blocks.push(moduleBoundaryBlock(widgetFiles, { ...siblings, forbidWidgets: false, forbidFeatures: false }));
-  }
-  if (componentFiles.length > 0) {
-    blocks.push(moduleBoundaryBlock(componentFiles, { ...siblings, forbidWidgets: true, forbidFeatures: true }));
-  }
-  return blocks;
-}
-
-/**
- * A registry item may import another installed item, but never the host's own
- * slice that happens to sit in the same tree. With no installed sibling in that
- * layer, every import from it is a host import.
- */
-function hostItemImport(prefix, siblings) {
-  const escaped = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  if (siblings.length === 0) return new RegExp(`^${escaped}/`);
-  return new RegExp(`^${escaped}/(?!(?:${siblings.map(escapeRegExp).join("|")})(?:/|$))`);
-}
-
-function moduleBoundaryBlock(
-  files,
-  { featureSiblings, widgetSiblings, componentSiblings, forbidWidgets, forbidFeatures },
-) {
-  const hostFeatureImport = hostItemImport("@/features", featureSiblings);
-  const hostWidgetImport = hostItemImport("@/widgets", widgetSiblings);
-  const allowedComponents = [
-    "@/components/*",
-    "!@/components/ui",
-    ...componentSiblings.map((name) => `!@/components/${name}`),
-  ];
-  const patterns = [
+  const items = [...new Set(moduleFiles.map((file) => file.split("/")[2]))];
+  return [
     {
-      group: ["next", "next/*", "next-intl", "next-intl/*"],
-      message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
-    },
-    {
-      group: ["axios", "@tanstack/*", "swr", "sonner", "@radix-ui/*"],
-      message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
-    },
-    {
-      group: ["@/app/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*"],
-      message: MODULE_BOUNDARY_MESSAGE,
-    },
-    { group: allowedComponents, message: MODULE_BOUNDARY_MESSAGE },
-    { group: ["@/lib/*", "!@/lib/utils"], message: MODULE_BOUNDARY_MESSAGE },
-  ];
-  if (forbidFeatures) {
-    patterns.push({
-      group: ["@/features/*"],
-      message: `${MODULE_BOUNDARY_MESSAGE} A shared component composes no feature; pass data in through props.`,
-    });
-  }
-  if (forbidWidgets) {
-    patterns.push({
-      group: ["@/widgets/*"],
-      message: `${MODULE_BOUNDARY_MESSAGE} Widgets compose features, never the reverse.`,
-    });
-  }
-
-  const syntax = [
-    {
-      selector: `ImportDeclaration[source.value=/${hostFeatureImport.source}/]`,
-      message: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host feature.`,
-    },
-    {
-      selector: `ImportExpression[source.value=/${hostFeatureImport.source}/]`,
-      message: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host feature.`,
-    },
-    {
-      selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
-      message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
-    },
-    {
-      selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr|@tanstack\\/.*)$/]",
-      message: MODULE_BOUNDARY_MESSAGE,
-    },
-  ];
-  if (!forbidWidgets) {
-    syntax.push(
-      {
-        selector: `ImportDeclaration[source.value=/${hostWidgetImport.source}/]`,
-        message: `${MODULE_BOUNDARY_MESSAGE} Import another installed widget, not a host widget.`,
+      files: moduleFiles,
+      plugins: { "module-boundary": itemBoundaryPlugin },
+      rules: {
+        "module-boundary/item-boundary": ["error", { items }],
+        "no-restricted-globals": [
+          "error",
+          { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+          { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+        ],
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: ["next", "next/*", "next-intl", "next-intl/*"],
+                message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
+              },
+              {
+                group: ["axios", "@tanstack/*", "swr", "sonner", "@radix-ui/*"],
+                message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
+              },
+              {
+                group: [
+                  "@/app/*",
+                  "@/api",
+                  "@/api/*",
+                  "@/i18n/*",
+                  "@/hooks/*",
+                  "@/store/*",
+                  "@/types/*",
+                  "@/components/*",
+                  "@/lib/*",
+                  "!@/lib/utils",
+                  "!@/lib/api-client",
+                  "!@/lib/api-client/*",
+                ],
+                message: MODULE_BOUNDARY_MESSAGE,
+              },
+            ],
+          },
+        ],
+        "no-restricted-syntax": [
+          "error",
+          {
+            selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr|@tanstack\\/.*)$/]",
+            message: MODULE_BOUNDARY_MESSAGE,
+          },
+          {
+            selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
+            message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
+          },
+        ],
+        // R7: an item has no i18n of its own; copy arrives through labels.
+        "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
       },
-      {
-        selector: `ImportExpression[source.value=/${hostWidgetImport.source}/]`,
-        message: `${MODULE_BOUNDARY_MESSAGE} Import another installed widget, not a host widget.`,
-      },
-    );
-  } else {
-    // no-restricted-imports does not see dynamic imports, and the direction rule
-    // bans every widget import, not just host ones.
-    syntax.push({
-      selector: "ImportExpression[source.value=/^@\\/widgets\\//]",
-      message: `${MODULE_BOUNDARY_MESSAGE} Widgets compose features, never the reverse.`,
-    });
-  }
-  if (forbidFeatures) {
-    syntax.push({
-      selector: "ImportExpression[source.value=/^@\\/features\\//]",
-      message: `${MODULE_BOUNDARY_MESSAGE} A shared component composes no feature; pass data in through props.`,
-    });
-  }
-
-  return {
-    files,
-    plugins: { "module-boundary": moduleBoundaryPlugin },
-    rules: {
-      "module-boundary/relative-item-boundary": [
-        "error",
-        {
-          allowedRoots: [
-            ...(forbidFeatures ? [] : featureSiblings.map((name) => `${FEATURE_PREFIX}${name}`)),
-            ...(forbidWidgets ? [] : widgetSiblings.map((name) => `${WIDGET_PREFIX}${name}`)),
-            ...componentSiblings.map((name) => `${COMPONENT_PREFIX}${name}`),
-            "src/components/ui",
-            "src/lib/utils",
-          ],
-          forbidWidgets,
-        },
-      ],
-      "no-restricted-globals": [
-        "error",
-        { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
-        { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
-      ],
-      "no-restricted-imports": ["error", { patterns }],
-      "no-restricted-syntax": ["error", ...syntax],
-      // R7: an item has no i18n of its own; copy arrives through labels.
-      "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
     },
-  };
+  ];
 }
 
 export const frameworkLintConfig = createFrameworkLintConfig(installedModuleFiles());

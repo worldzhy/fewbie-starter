@@ -3,7 +3,7 @@
 import { Languages } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/fewbie/ui/button";
 
 const LOCALE_LABELS: Record<string, string> = {
   en: "EN",
@@ -13,7 +13,7 @@ const LOCALE_LABELS: Record<string, string> = {
 /**
  * Toggle for the UI language. There is no `[locale]` route segment, so the
  * locale travels in the NEXT_LOCALE cookie rather than the URL (see
- * src/i18n/config.ts); a refresh re-renders the server tree in the newly
+ * src/fewbie/i18n/config.ts); a refresh re-renders the server tree in the newly
  * selected locale.
  *
  * Mount it wherever the language control belongs (e.g. an app header).

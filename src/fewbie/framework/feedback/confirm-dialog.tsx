@@ -12,8 +12,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
+} from "@/fewbie/ui/alert-dialog";
+import { Input } from "@/fewbie/ui/input";
 
 // Options accepted by the imperative confirm() call.
 export interface ConfirmOptions {

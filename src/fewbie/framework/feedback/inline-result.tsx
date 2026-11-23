@@ -2,7 +2,7 @@ import * as React from "react";
 import { AlertCircle, CheckCircle2, Info } from "lucide-react";
 import { cn } from "cn";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/fewbie/ui/alert";
 
 export type InlineResultTone = "success" | "error" | "info";
 

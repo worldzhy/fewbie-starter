@@ -2,7 +2,7 @@
 /**
  * R9: no new primitive copies under `src/components`.
  *
- * `src/components/ui/**` is framework-owned. A host component that exports a
+ * `src/fewbie/ui/**` is framework-owned. A host component that exports a
  * name already exported by a primitive (or that duplicates another host
  * component) would silently fork the design system, so both cases fail here.
  */
@@ -35,19 +35,20 @@ export function exportedComponents(source) {
 /** Compare host components against the primitive set and against each other. */
 export async function checkPrimitives(root = process.cwd()) {
   const componentsRoot = path.join(root, "src", "components");
-  if (!(await pathExists(componentsRoot))) return [];
+  const primitivesRoot = path.join(root, "src", "fewbie", "ui");
+  const hasComponents = await pathExists(componentsRoot);
+  if (!hasComponents && !(await pathExists(primitivesRoot))) return [];
 
-  const files = await listFiles(componentsRoot, { extensions: [".tsx", ".ts"] });
   const primitiveNames = new Set();
-  const hostFiles = [];
-  for (const file of files) {
-    if (file.startsWith("ui/")) {
-      const source = await readFile(path.join(componentsRoot, file), "utf8");
+  if (await pathExists(primitivesRoot)) {
+    for (const file of await listFiles(primitivesRoot, { extensions: [".tsx", ".ts"] })) {
+      const source = await readFile(path.join(primitivesRoot, file), "utf8");
       for (const name of exportedComponents(source)) primitiveNames.add(name);
-      continue;
     }
-    hostFiles.push(file);
   }
+  if (!hasComponents) return [];
+
+  const hostFiles = await listFiles(componentsRoot, { extensions: [".tsx", ".ts"] });
 
   const violations = [];
   const owner = new Map();
@@ -57,7 +58,7 @@ export async function checkPrimitives(root = process.cwd()) {
       if (primitiveNames.has(name)) {
         violations.push({
           file: `src/components/${file}`,
-          message: `re-exports primitive "${name}"; import it from @/components/ui instead`,
+          message: `re-exports primitive "${name}"; import it from @/fewbie/ui instead`,
         });
         continue;
       }

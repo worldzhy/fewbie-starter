@@ -4,8 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, PanelLeftClose, PanelLeftOpen, type LucideIcon } from "lucide-react";
-import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/fewbie/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/fewbie/ui/tooltip";
 import { cn } from "cn";
 
 interface SidebarNavLinkProps {

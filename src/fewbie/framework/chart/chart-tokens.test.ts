@@ -8,7 +8,7 @@ import { CHART_TOOLTIP_STYLE } from "./chart-theme";
 // Canvas rendering cannot read CSS variables, so the chart constants are the
 // light-theme fallbacks for the tokens in globals.css. This test is the guard
 // that keeps the two in step.
-const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
+const css = readFileSync(new URL("../../../app/globals.css", import.meta.url), "utf8");
 
 function declarations(selector: string): Record<string, string> {
   const start = css.indexOf(`${selector} {`);

@@ -15,7 +15,7 @@ npm run lint    # eslint
 ## UI components
 
 The template ships a small set of shadcn/ui primitives under
-`src/components/ui/` (button, card, input, dialog, ...). Add more with the
+`src/fewbie/ui/` (button, card, input, dialog, ...). Add more with the
 official CLI:
 
 ```bash

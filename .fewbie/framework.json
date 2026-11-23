@@ -1,7 +1,7 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "898d3e6d1bea24fab3da422b5951e6700a5d60e98b05b1d06b10ce60b2ec9ded",
+  "digest": "8252def1c12242edc64dcda15cc9302b7b1e4f809bb24e911010bbccaf886f1d",
   "files": {
     "components.json": "f7b99fc19635aa09fb59432ed5c6b6084c57421804fba2544105fe258759f6ee",
     "eslint.config.mjs": "1eb4b71e8c87aa5ee552c42373af87bf17706f99515eef76d66f3578fc9f2f60",
@@ -80,8 +80,8 @@
     "src/fewbie/ui/tabs.tsx": "c04b741b89aed3e158a4ba490f46bd633defce6d7ab797bc083482277b65191d",
     "src/fewbie/ui/textarea.tsx": "e9d2177f62835ed4e95e4f4fb9bbdd05900a1421ce3264f60d675dc2882becce",
     "src/fewbie/ui/tooltip.tsx": "2b5799404fe87567e0d52f34e66b153c211a834cd34f35224ca49dc8f1c07476",
-    "src/i18n/messages/framework.en.json": "6c791161d0f4f55619106b260e609d5130b557d17b35e4b49b6b06290f831cca",
-    "src/i18n/messages/framework.zh.json": "c128c097db3ed5fa10ea0da36e195c6421c6964200c900c8e2105d87a0e570ba",
+    "src/i18n/messages/framework.en.json": "244f4756f60ad155358ae871b4c0ea918fc49b3d78058c9970fa0111872bd37b",
+    "src/i18n/messages/framework.zh.json": "b103d5512bfff38d112e6c6db2fba8d27c11d3026ac60f80b27ad4e4bf95e07f",
     "src/instrumentation.ts": "d87c6428cd8a6335b0ddd1bfb9ff302af543c18fe370aab799d7b94f47bb8134",
     "src/lib/api-client/client.ts": "9b5740bc2df24bfc9a36e744df4a7aeb1155e9adf9650ad1aab3b061b35d059b",
     "src/lib/api-client/error-channel.ts": "8624167282d43e1bb4c2a9b3079e19b36368131f38f5a034ed874d27d320d150",

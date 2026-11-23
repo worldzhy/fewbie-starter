@@ -1,19 +1,4 @@
 {
-  "common": {
-    "ok": "OK",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "save": "Save",
-    "close": "Close",
-    "confirm": "Confirm",
-    "retry": "Retry",
-    "loading": "Loading...",
-    "empty": "No data",
-    "success": "Success",
-    "error": "Error",
-    "warning": "Warning",
-    "done": "Done"
-  },
   "home": {
     "title": "fewbie",
     "description": "Basic template: Next.js App Router + Tailwind CSS + shadcn/ui.",

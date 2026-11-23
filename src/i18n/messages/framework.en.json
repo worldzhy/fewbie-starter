@@ -21,6 +21,14 @@
     "chartLine": "Line chart",
     "chartBar": "Bar chart",
     "chartPie": "Pie chart",
-    "chartDoughnut": "Doughnut chart"
+    "chartDoughnut": "Doughnut chart",
+    "back": "Back",
+    "edit": "Edit",
+    "create": "Create",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {totalPages}",
+    "recordCount": "{count} records",
+    "copied": "Copied"
   }
 }

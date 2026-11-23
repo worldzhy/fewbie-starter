@@ -55,6 +55,10 @@ jobs:
       - name: Template ownership check
         run: npm run check:template
 
+      # ADR-074 D1: framework/shared host copy must not overlap `framework.common`.
+      - name: Framework doctor
+        run: npx fewbie doctor
+
       - name: Lint
         run: npm run lint
 
@@ -102,6 +106,10 @@ jobs:
       # reports self-comparison explicitly instead of pretending to gate drift).
       - name: Template ownership check
         run: npm run check:template
+
+      # ADR-074 D1: framework/shared host copy must not overlap `framework.common`.
+      - name: Framework doctor
+        run: npx fewbie doctor
 
       - name: Lint
         run: npm run lint

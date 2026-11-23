@@ -58,3 +58,13 @@ test("framework.common carries the keys shared components read", () => {
     assert.ok(keys.includes(key), `framework.common.${key} is missing`);
   }
 });
+
+test("framework.common carries the shared vocabulary (ADR-074)", () => {
+  // Common words belong to the framework namespace; hosts must not redefine
+  // them under their own `common` (enforced by `fewbie doctor`).
+  const keys = Object.keys(loadFrameworkMessages("en").common);
+  assert.equal(keys.length, 30);
+  for (const key of ["back", "edit", "create", "previous", "next", "pageOf", "recordCount", "copied"]) {
+    assert.ok(keys.includes(key), `framework.common.${key} is missing`);
+  }
+});

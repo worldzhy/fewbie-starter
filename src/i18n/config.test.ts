@@ -5,6 +5,10 @@ import { before, mock, test } from "node:test";
  * The request config reads the locale cookie through `next/headers` and is
  * registered through `next-intl/server`; both are mocked so the callback runs
  * without a Next request scope. The cookie value stays mutable per test.
+ *
+ * This is a host integration test: it asserts the host message namespace loads
+ * alongside the framework one, so it lives outside the framework-owned
+ * `src/fewbie/i18n/` surface (ADR-070 D3).
  */
 let cookieLocale: string | undefined;
 
@@ -34,7 +38,7 @@ let requestConfig: RequestConfigFn;
 before(async () => {
   // tsx loads this module through the CommonJS interop path, so the default
   // export may be nested on the module namespace.
-  const namespace = (await import("./config")) as unknown as {
+  const namespace = (await import("../fewbie/i18n/config")) as unknown as {
     default: RequestConfigFn | { default: RequestConfigFn };
   };
   requestConfig = typeof namespace.default === "function" ? namespace.default : namespace.default.default;

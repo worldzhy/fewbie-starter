@@ -33,18 +33,20 @@ const FRAMEWORK_CODE = ["src/framework/**/*.{ts,tsx}"];
 const LOCKFILE = new URL("./fewbie.lock.json", import.meta.url);
 const FEATURE_PREFIX = "src/features/";
 const WIDGET_PREFIX = "src/widgets/";
+const COMPONENT_PREFIX = "src/components/";
+const UI_PREFIX = "src/components/ui/";
 const MODULE_BOUNDARY_MESSAGE =
   "A registry item may import React, @/components/ui/*, @/lib/utils, its own files and the sibling items installed " +
   "next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
 /**
  * Files the lockfile records as installed items: `registry:feature` slices under
- * `src/features/**` and `registry:widget` compositions under `src/widgets/**`.
- * `registry:component` and `registry:lib` items keep living in
- * `src/components/**` and `src/lib/**` and stay under the host rules, because
- * they are shared payloads by design. Copy-assembled items may only depend on
- * the framework surface and other installed items, so transport, i18n, router,
- * toast and state libraries stay in the host adapter that renders them
+ * `src/features/**`, `registry:widget` compositions under `src/widgets/**` and
+ * `registry:component` payloads under `src/components/**` (ADR-068).
+ * `registry:lib` items keep living in `src/lib/**` and stay under the host rules,
+ * because they are shared payloads by design. Copy-assembled items may only
+ * depend on the framework surface and other installed items, so transport, i18n,
+ * router, toast and state libraries stay in the host adapter that renders them
  * (ADR-057, ADR-062, ADR-065, ADR-066).
  */
 function installedModuleFiles() {
@@ -70,7 +72,9 @@ function installedModuleFiles() {
     if (files === null || typeof files !== "object" || Array.isArray(files)) {
       throw new Error("fewbie.lock.json is malformed: every module `files` must be an object.");
     }
-    return Object.keys(files).filter((file) => file.startsWith(FEATURE_PREFIX) || file.startsWith(WIDGET_PREFIX));
+    return Object.keys(files).filter(
+      (file) => file.startsWith(FEATURE_PREFIX) || file.startsWith(WIDGET_PREFIX) || file.startsWith(COMPONENT_PREFIX),
+    );
   });
 }
 
@@ -297,28 +301,37 @@ const moduleBoundaryPlugin = {
 };
 
 /**
- * Module boundary (ADR-057, ADR-065, ADR-066): a registry item is copied into
- * the host as-is, so it must compile against the framework surface plus the
- * other installed items alone. Features and widgets are separate layers: a
- * widget may compose installed features and widgets, a feature never reaches
- * into `@/widgets/**`.
+ * Module boundary (ADR-057, ADR-065, ADR-066, ADR-068): a registry item is
+ * copied into the host as-is, so it must compile against the framework surface
+ * plus the other installed items alone. Features and widgets are separate
+ * layers: a widget may compose installed features and widgets, a feature never
+ * reaches into `@/widgets/**`, and a component payload composes neither — it is
+ * the shared layer the other two depend on.
  */
 function moduleBoundaryConfig(moduleFiles) {
   if (moduleFiles.length === 0) return [];
 
   const featureFiles = moduleFiles.filter((file) => file.startsWith(FEATURE_PREFIX));
   const widgetFiles = moduleFiles.filter((file) => file.startsWith(WIDGET_PREFIX));
+  // An installed component item is a registry payload, not host code; the
+  // framework primitives under `src/components/ui/**` are neither (ADR-068).
+  const componentFiles = moduleFiles.filter((file) => file.startsWith(COMPONENT_PREFIX) && !file.startsWith(UI_PREFIX));
   const siblingsOf = (files, prefix) => [...new Set(files.map((file) => file.slice(prefix.length).split("/")[0]))];
 
   const featureSiblings = siblingsOf(featureFiles, FEATURE_PREFIX);
   const widgetSiblings = siblingsOf(widgetFiles, WIDGET_PREFIX);
+  const componentSiblings = siblingsOf(componentFiles, COMPONENT_PREFIX);
+  const siblings = { featureSiblings, widgetSiblings, componentSiblings };
 
   const blocks = [];
   if (featureFiles.length > 0) {
-    blocks.push(moduleBoundaryBlock(featureFiles, { featureSiblings, widgetSiblings, forbidWidgets: true }));
+    blocks.push(moduleBoundaryBlock(featureFiles, { ...siblings, forbidWidgets: true, forbidFeatures: false }));
   }
   if (widgetFiles.length > 0) {
-    blocks.push(moduleBoundaryBlock(widgetFiles, { featureSiblings, widgetSiblings, forbidWidgets: false }));
+    blocks.push(moduleBoundaryBlock(widgetFiles, { ...siblings, forbidWidgets: false, forbidFeatures: false }));
+  }
+  if (componentFiles.length > 0) {
+    blocks.push(moduleBoundaryBlock(componentFiles, { ...siblings, forbidWidgets: true, forbidFeatures: true }));
   }
   return blocks;
 }
@@ -334,9 +347,17 @@ function hostItemImport(prefix, siblings) {
   return new RegExp(`^${escaped}/(?!(?:${siblings.map(escapeRegExp).join("|")})(?:/|$))`);
 }
 
-function moduleBoundaryBlock(files, { featureSiblings, widgetSiblings, forbidWidgets }) {
+function moduleBoundaryBlock(
+  files,
+  { featureSiblings, widgetSiblings, componentSiblings, forbidWidgets, forbidFeatures },
+) {
   const hostFeatureImport = hostItemImport("@/features", featureSiblings);
   const hostWidgetImport = hostItemImport("@/widgets", widgetSiblings);
+  const allowedComponents = [
+    "@/components/*",
+    "!@/components/ui",
+    ...componentSiblings.map((name) => `!@/components/${name}`),
+  ];
   const patterns = [
     {
       group: ["next", "next/*", "next-intl", "next-intl/*"],
@@ -350,9 +371,15 @@ function moduleBoundaryBlock(files, { featureSiblings, widgetSiblings, forbidWid
       group: ["@/app/*", "@/framework/*", "@/api", "@/api/*", "@/i18n/*"],
       message: MODULE_BOUNDARY_MESSAGE,
     },
-    { group: ["@/components/*", "!@/components/ui"], message: MODULE_BOUNDARY_MESSAGE },
+    { group: allowedComponents, message: MODULE_BOUNDARY_MESSAGE },
     { group: ["@/lib/*", "!@/lib/utils"], message: MODULE_BOUNDARY_MESSAGE },
   ];
+  if (forbidFeatures) {
+    patterns.push({
+      group: ["@/features/*"],
+      message: `${MODULE_BOUNDARY_MESSAGE} A shared component composes no feature; pass data in through props.`,
+    });
+  }
   if (forbidWidgets) {
     patterns.push({
       group: ["@/widgets/*"],
@@ -397,6 +424,12 @@ function moduleBoundaryBlock(files, { featureSiblings, widgetSiblings, forbidWid
       message: `${MODULE_BOUNDARY_MESSAGE} Widgets compose features, never the reverse.`,
     });
   }
+  if (forbidFeatures) {
+    syntax.push({
+      selector: "ImportExpression[source.value=/^@\\/features\\//]",
+      message: `${MODULE_BOUNDARY_MESSAGE} A shared component composes no feature; pass data in through props.`,
+    });
+  }
 
   return {
     files,
@@ -406,8 +439,9 @@ function moduleBoundaryBlock(files, { featureSiblings, widgetSiblings, forbidWid
         "error",
         {
           allowedRoots: [
-            ...featureSiblings.map((name) => `${FEATURE_PREFIX}${name}`),
-            ...widgetSiblings.map((name) => `${WIDGET_PREFIX}${name}`),
+            ...(forbidFeatures ? [] : featureSiblings.map((name) => `${FEATURE_PREFIX}${name}`)),
+            ...(forbidWidgets ? [] : widgetSiblings.map((name) => `${WIDGET_PREFIX}${name}`)),
+            ...componentSiblings.map((name) => `${COMPONENT_PREFIX}${name}`),
             "src/components/ui",
             "src/lib/utils",
           ],

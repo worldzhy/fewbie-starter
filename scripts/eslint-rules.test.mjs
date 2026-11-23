@@ -226,8 +226,15 @@ test("R11 rejects an inline query-key literal", async () => {
 const LOGIN_PAGE = "src/features/login-page/login-page.tsx";
 const NOTIFICATION_WIDGET = "src/widgets/notification-center/notification-center.tsx";
 const COPILOT_WIDGET = "src/widgets/copilot/index.ts";
+const PRESENTATION_COMPONENT = "src/components/notification-presentation/index.ts";
 // What the lockfile would record for a host that installed both layers.
-const INSTALLED_ITEMS = [LOGIN_PAGE, "src/features/password-checklist/index.ts", NOTIFICATION_WIDGET, COPILOT_WIDGET];
+const INSTALLED_ITEMS = [
+  LOGIN_PAGE,
+  "src/features/password-checklist/index.ts",
+  NOTIFICATION_WIDGET,
+  COPILOT_WIDGET,
+  PRESENTATION_COMPONENT,
+];
 
 test("registry items may only reach the framework surface and installed items", async () => {
   const allowed = await lintFixture(
@@ -334,6 +341,84 @@ test("widgets may not reach host slices in either layer", async () => {
   );
   assert.ok(
     errors(noFeatureSiblings, "no-restricted-syntax").some((message) => message.text.includes("not a host feature")),
+  );
+});
+
+test("features and widgets may compose installed component items", async () => {
+  const sources = {
+    [LOGIN_PAGE]:
+      'import { SeverityBadge } from "@/components/notification-presentation";\nexport const value = SeverityBadge;',
+    [NOTIFICATION_WIDGET]:
+      'import { SeverityBadge } from "@/components/notification-presentation";\nexport const value = SeverityBadge;',
+  };
+  for (const [file, source] of Object.entries(sources)) {
+    const messages = await lintFixture({ [file]: source }, INSTALLED_ITEMS);
+    assert.deepEqual(errors(messages), [], `${file} must be able to import an installed component item`);
+  }
+});
+
+test("component payloads compose neither features nor widgets and not host components", async () => {
+  const hostComponent = await lintFixture(
+    { [PRESENTATION_COMPONENT]: 'import { helper } from "@/components/host-widget";\nexport const value = helper;' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(hostComponent, "no-restricted-imports").length >= 1);
+
+  const feature = await lintFixture(
+    { [PRESENTATION_COMPONENT]: 'import { LoginPage } from "@/features/login-page";\nexport const value = LoginPage;' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(feature, "no-restricted-imports").length >= 1);
+
+  const dynamicFeature = await lintFixture(
+    { [PRESENTATION_COMPONENT]: 'export const load = () => import("@/features/login-page");' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(dynamicFeature, "no-restricted-syntax").length >= 1);
+
+  const widget = await lintFixture(
+    { [PRESENTATION_COMPONENT]: 'import { Copilot } from "@/widgets/copilot";\nexport const value = Copilot;' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(widget, "no-restricted-imports").some((message) => message.text.includes("never the reverse")));
+
+  // Another installed component payload, the framework primitives and
+  // @/lib/utils stay reachable.
+  const allowed = await lintFixture(
+    {
+      [PRESENTATION_COMPONENT]: `
+      import { Button } from "@/components/ui/button";
+      import { cn } from "@/lib/utils";
+      import { SeverityBadge } from "./severity-badge";
+      export const value = [Button, cn, SeverityBadge];
+    `,
+    },
+    INSTALLED_ITEMS,
+  );
+  assert.deepEqual(errors(allowed), []);
+});
+
+test("relative imports into installed component payloads stay inside the boundary", async () => {
+  const installed = await lintFixture(
+    {
+      "src/features/shop/shop.tsx":
+        'import { badge } from "../../components/notification-presentation/index";\nexport const page = badge;',
+    },
+    [...INSTALLED_ITEMS, "src/features/shop/shop.tsx"],
+  );
+  assert.deepEqual(errors(installed, "module-boundary/relative-item-boundary"), []);
+
+  const hostComponent = await lintFixture(
+    {
+      "src/features/shop/shop.tsx":
+        'import { dock } from "../../components/host-widget/dock";\nexport const page = dock;',
+    },
+    [...INSTALLED_ITEMS, "src/features/shop/shop.tsx"],
+  );
+  assert.ok(
+    errors(hostComponent, "module-boundary/relative-item-boundary").some((message) =>
+      message.text.includes("not a host file"),
+    ),
   );
 });
 

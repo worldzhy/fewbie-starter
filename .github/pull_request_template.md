@@ -4,7 +4,7 @@
 
 - [ ] This change introduces no new cross-host contract, renamed concept, or architecture decision, OR an ADR is linked below and was accepted before this PR was opened.
   - ADR:
-- [ ] If this PR touches `src/framework/**`, `src/components/ui/**`, `src/lib/api-client/**`, `src/i18n/config.ts`, `src/app/layout.tsx`, `eslint.config.mjs` or `scripts/**`, an ADR under `.trae/documents/decisions/` is included (R12).
+- [ ] If this PR touches `src/fewbie/framework/**`, `src/fewbie/ui/**`, `src/lib/api-client/**`, `src/fewbie/i18n/config.ts`, `src/app/layout.tsx`, `eslint.config.mjs` or `scripts/**`, an ADR under `.trae/documents/decisions/` is included (R12).
 
 ## Module coupling
 

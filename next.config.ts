@@ -1,7 +1,7 @@
 import createNextIntlPlugin from "next-intl/plugin";
 import { withFewbie } from "./next.config.framework";
 
-const withNextIntl = createNextIntlPlugin("./src/i18n/config.ts");
+const withNextIntl = createNextIntlPlugin("./src/fewbie/i18n/config.ts");
 
 // Host configuration only. Framework defaults and invariants live in
 // next.config.framework.ts and reach this file through `fewbie template update`;

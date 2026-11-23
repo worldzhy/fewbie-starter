@@ -20,7 +20,7 @@ type Register = () => Promise<void>;
 let register: Register;
 
 before(async () => {
-  const namespace = (await import("../../instrumentation")) as unknown as { register: Register };
+  const namespace = (await import("@/instrumentation")) as unknown as { register: Register };
   register = namespace.register;
 });
 

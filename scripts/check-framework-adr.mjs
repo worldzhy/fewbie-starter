@@ -15,13 +15,13 @@ import { pathToFileURL } from "node:url";
 
 /** Paths owned by the framework (ADR-056 D1); editing them is a contract change. */
 export const FRAMEWORK_PATHS = [
-  "src/framework/",
-  "src/components/ui/",
+  "src/fewbie/framework/",
+  "src/fewbie/ui/",
   "src/lib/api-client/",
   "src/app/layout.tsx",
   "src/app/globals.css",
   "src/app/fonts/",
-  "src/i18n/config.ts",
+  "src/fewbie/i18n/config.ts",
   "src/i18n/messages/framework.",
   "src/instrumentation.ts",
   "src/lib/utils.ts",

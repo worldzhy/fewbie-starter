@@ -2,8 +2,8 @@ import * as React from "react";
 import { AlertCircle } from "lucide-react";
 import { cn } from "cn";
 
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/fewbie/ui/alert";
+import { Button } from "@/fewbie/ui/button";
 
 /**
  * Block-level read failure: the section could not load and the operator needs

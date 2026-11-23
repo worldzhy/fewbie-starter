@@ -18,7 +18,7 @@ test("session state is in memory and ends exactly once per session", async () =>
     },
   };
 
-  const session = await import("../../lib/api-client/session-store");
+  const session = await import("@/lib/api-client/session-store");
 
   session.setSession("token-1", 120);
   assert.equal(session.getAccessToken(), "token-1");

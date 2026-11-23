@@ -26,7 +26,7 @@ async function withProject(files, run) {
 }
 
 const COMPLIANT_PAGE = `
-import PageShell from "@/framework/page/page-shell";
+import PageShell from "@/fewbie/framework/page/page-shell";
 
 export default function Page() {
   return <PageShell title="Users" />;
@@ -70,7 +70,7 @@ test("R1 only counts PageShell when the code uses it", () => {
   assert.equal(inspectPage(commentOnly).length, 1);
   // An unused import is equally not a render (R82-23).
   const importOnly = [
-    'import PageShell from "@/framework/page/page-shell";',
+    'import PageShell from "@/fewbie/framework/page/page-shell";',
     "export default function P() {",
     "  return <div>Body</div>;",
     "}",
@@ -99,7 +99,10 @@ test("R5 rejects a hand-written fixed sidebar frame", () => {
   // Rendering the shell satisfies the rule ...
   assert.deepEqual(inspectLayout(`${rebuilt}\nreturn <SidebarShell />;`), []);
   // ... but importing or naming it does not (R83-16).
-  assert.equal(inspectLayout(`${rebuilt}\nimport { SidebarShell } from "@/framework/shell/sidebar-shell";`).length, 1);
+  assert.equal(
+    inspectLayout(`${rebuilt}\nimport { SidebarShell } from "@/fewbie/framework/shell/sidebar-shell";`).length,
+    1,
+  );
   assert.equal(inspectLayout(`${rebuilt}\n// TODO: render <SidebarShell />`).length, 1);
 });
 
@@ -120,7 +123,7 @@ test("R5 leaves the framework root layout alone", async () => {
 test("R9 rejects primitive re-exports and duplicated host components", async () => {
   const violations = await withProject(
     {
-      "src/components/ui/button.tsx": "export function Button() { return null; }",
+      "src/fewbie/ui/button.tsx": "export function Button() { return null; }",
       "src/components/button-copy.tsx": "export function Button() { return null; }",
       "src/components/a/widget.tsx": "export function Widget() { return null; }",
       "src/components/b/widget.tsx": "export function Widget() { return null; }",
@@ -135,7 +138,7 @@ test("R9 rejects primitive re-exports and duplicated host components", async () 
 test("R9 accepts host components that do not shadow primitives", async () => {
   const violations = await withProject(
     {
-      "src/components/ui/button.tsx": "export function Button() { return null; }",
+      "src/fewbie/ui/button.tsx": "export function Button() { return null; }",
       "src/components/user-card.tsx": "export function UserCard() { return null; }",
     },
     checkPrimitives,
@@ -162,14 +165,14 @@ test("R10 rejects non-kebab-case route segments and allows route syntax", async 
 
 test("R12 requires an ADR next to a framework change", () => {
   assert.deepEqual(checkFrameworkAdr(["src/app/page.tsx"]), []);
-  assert.equal(checkFrameworkAdr(["src/framework/page/page-shell.tsx"]).length, 1);
+  assert.equal(checkFrameworkAdr(["src/fewbie/framework/page/page-shell.tsx"]).length, 1);
   assert.deepEqual(
-    checkFrameworkAdr(["src/framework/page/page-shell.tsx", ".trae/documents/decisions/ADR-999-test.md"]),
+    checkFrameworkAdr(["src/fewbie/framework/page/page-shell.tsx", ".trae/documents/decisions/ADR-999-test.md"]),
     [],
   );
   // The theme tokens, the locale config and the baseline manifest are
   // cross-host contracts too: editing them needs a design decision.
-  for (const file of ["src/i18n/config.ts", "src/app/globals.css", ".fewbie/framework.json"]) {
+  for (const file of ["src/fewbie/i18n/config.ts", "src/app/globals.css", ".fewbie/framework.json"]) {
     assert.equal(checkFrameworkAdr([file]).length, 1, `${file} must be a framework contract path`);
   }
 });
@@ -199,7 +202,7 @@ test("the root layout mounts the framework providers", async () => {
 });
 
 test("the tooltip primitive uses popover tokens the theme defines", async () => {
-  const tooltip = await readFile(new URL("src/components/ui/tooltip.tsx", repoRoot), "utf8");
+  const tooltip = await readFile(new URL("src/fewbie/ui/tooltip.tsx", repoRoot), "utf8");
   const css = await readFile(new URL("src/app/globals.css", repoRoot), "utf8");
   for (const token of ["bg-popover", "text-popover-foreground", "fill-popover"]) {
     assert.ok(tooltip.includes(token), `tooltip.tsx must use ${token}`);

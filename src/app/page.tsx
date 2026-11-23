@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
-import { Button } from "@/components/ui/button";
-import PageShell from "@/framework/page/page-shell";
+import { Button } from "@/fewbie/ui/button";
+import PageShell from "@/fewbie/framework/page/page-shell";
 
 export default async function Home() {
   const t = await getTranslations("home");

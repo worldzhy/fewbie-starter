@@ -26,7 +26,7 @@ This repository is a [fewbie](https://github.com/worldzhy/devbie) application (N
 
 ### Don't
 
-- Never edit framework-synced files: `next.config.framework.ts`, `tsconfig.json`, `postcss.config.mjs`, `eslint.config.mjs`, `components.json`, `src/instrumentation.ts`, `src/app/layout.tsx`, `src/lib/utils.ts`, `src/lib/api-client/**`, `src/i18n/config.ts`, `src/i18n/request.ts`, `src/i18n/messages/framework.*.json`, `src/components/ui/**`, `src/framework/**`, `src/app/fonts/**`, `scripts/**`, `.fewbie/framework.json`. Propose skeleton changes in the [fewbie-starter](https://github.com/worldzhy/fewbie-starter) template instead.
+- Never edit framework-synced files: `next.config.framework.ts`, `tsconfig.json`, `postcss.config.mjs`, `eslint.config.mjs`, `components.json`, `src/instrumentation.ts`, `src/app/layout.tsx`, `src/lib/utils.ts`, `src/lib/api-client/**`, `src/fewbie/i18n/config.ts`, `src/i18n/request.ts`, `src/i18n/messages/framework.*.json`, `src/fewbie/ui/**`, `src/fewbie/framework/**`, `src/app/fonts/**`, `scripts/**`, `.fewbie/framework.json`. Propose skeleton changes in the [fewbie-starter](https://github.com/worldzhy/fewbie-starter) template instead.
 - Never edit inside a `fewbie:framework` block (`src/app/globals.css`, `.env.example`, `.prettierignore`, this file); `template update` replaces the block wholesale.
 
 <!-- fewbie:framework:end -->

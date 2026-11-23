@@ -32,9 +32,9 @@ describe("fewbie-basic-template smoke", () => {
   });
 
   test("Core shadcn/ui primitives are present", () => {
-    assert.ok(existsSync("src/components/ui/button.tsx"));
-    assert.ok(existsSync("src/components/ui/card.tsx"));
-    assert.ok(existsSync("src/components/ui/input.tsx"));
+    assert.ok(existsSync("src/fewbie/ui/button.tsx"));
+    assert.ok(existsSync("src/fewbie/ui/card.tsx"));
+    assert.ok(existsSync("src/fewbie/ui/input.tsx"));
   });
 
   test("Tailwind v4 config is well-formed", () => {

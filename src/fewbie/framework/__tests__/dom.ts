@@ -3,7 +3,7 @@ import { JSDOM } from "jsdom";
 /**
  * jsdom bootstrap for the framework rendering tests.
  *
- * These tests are framework-owned: they live under `src/framework/**`, appear
+ * These tests are framework-owned: they live under `src/fewbie/framework/**`, appear
  * in `.fewbie/framework.json`, and `fewbie template update` keeps them in sync
  * with the implementation they cover.
  */

@@ -20,8 +20,8 @@ function adapterReturning(data: unknown, delayMs = 0) {
 
 test("concurrent refreshes share one round-trip", async () => {
   installWindow();
-  const session = await import("../../lib/api-client/session-store");
-  const exchange = await import("../../lib/api-client/refresh-exchange");
+  const session = await import("@/lib/api-client/session-store");
+  const exchange = await import("@/lib/api-client/refresh-exchange");
 
   let calls = 0;
   const defaults = axios.defaults as MutableDefaults;
@@ -47,8 +47,8 @@ test("concurrent refreshes share one round-trip", async () => {
 
 test("a refresh that lands after the session ended does not revive it", async () => {
   installWindow();
-  const session = await import("../../lib/api-client/session-store");
-  const exchange = await import("../../lib/api-client/refresh-exchange");
+  const session = await import("@/lib/api-client/session-store");
+  const exchange = await import("@/lib/api-client/refresh-exchange");
 
   const defaults = axios.defaults as MutableDefaults;
   const original = defaults.adapter;

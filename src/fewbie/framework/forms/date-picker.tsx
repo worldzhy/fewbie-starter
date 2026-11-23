@@ -7,10 +7,10 @@ import { CalendarIcon } from "lucide-react";
 import type { Locale } from "react-day-picker";
 import { enUS, zhCN } from "react-day-picker/locale";
 import { cn } from "cn";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/fewbie/ui/button";
+import { Calendar } from "@/fewbie/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/fewbie/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/fewbie/ui/select";
 
 type Formatter = ReturnType<typeof useFormatter>;
 

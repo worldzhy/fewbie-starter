@@ -15,7 +15,7 @@ npm run lint    # eslint
 ## UI components
 
 The template ships a small set of shadcn/ui primitives under
-`src/components/ui/` (button, card, input, dialog, ...). Add more with the
+`src/fewbie/ui/` (button, card, input, dialog, ...). Add more with the
 official CLI:
 
 ```bash
@@ -39,7 +39,7 @@ Without them the hook is a no-op.
 
 ## Web monitor (optional, browser side)
 
-The monitor is a registry item, not part of the skeleton. Install it, then mount
+The monitor is a registry module, not part of the skeleton. Install it, then mount
 the component in your own layout or provider:
 
 ```bash

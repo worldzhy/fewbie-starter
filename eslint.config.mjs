@@ -21,20 +21,20 @@ import next from "@devbie/style-guide/eslint/next";
  */
 const HOST_CODE = ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"];
 const FRAMEWORK_CODE = ["src/fewbie/framework/**/*.{ts,tsx}"];
-// Registry payload is item-first (ADR-070 D1), so both item identity and layer
-// come from the path: `src/items/<item>/<layer>/…`. The lockfile lists every
-// installed file; a host without one has no items.
+// Registry payload is module-first (ADR-070 D1), so both module identity and
+// layer come from the path: `src/fewbie/modules/<module>/<layer>/…`. The
+// lockfile lists every installed file; a host without one has no modules.
 const LOCKFILE = new URL("./fewbie.lock.json", import.meta.url);
-const ITEM_PREFIX = "src/items/";
+const MODULE_PREFIX = "src/fewbie/modules/";
 const MODULE_BOUNDARY_MESSAGE =
-  "A registry item may import React, @/fewbie/ui/*, @/lib/utils, @/lib/api-client, its own files and the sibling " +
-  "items installed next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
+  "A registry module may import React, @/fewbie/ui/*, @/lib/utils, @/lib/api-client, its own files and the sibling " +
+  "modules installed next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
 /**
- * Files the lockfile records as installed items. Copy-assembled items may only
- * depend on the framework surface and other installed items, so transport, i18n,
- * router, toast and state libraries stay in the host adapter that renders them
- * (ADR-057, ADR-062, ADR-069, ADR-070).
+ * Files the lockfile records as installed modules. Copy-assembled modules may
+ * only depend on the framework surface and other installed modules, so
+ * transport, i18n, router, toast and state libraries stay in the host adapter
+ * that renders them (ADR-057, ADR-062, ADR-069, ADR-070).
  */
 function installedModuleFiles() {
   let lockfile;
@@ -59,11 +59,11 @@ function installedModuleFiles() {
     if (files === null || typeof files !== "object" || Array.isArray(files)) {
       throw new Error("fewbie.lock.json is malformed: every module `files` must be an object.");
     }
-    return Object.keys(files).filter((file) => file.startsWith(ITEM_PREFIX));
+    return Object.keys(files).filter((file) => file.startsWith(MODULE_PREFIX));
   });
 }
 
-/** Layers an item at `layer` may import from any installed item (ADR-069 D4). */
+/** Layers a module at `layer` may import from any installed module (ADR-069 D4). */
 const LAYER_IMPORTS = {
   features: ["features", "components", "lib"],
   widgets: ["features", "widgets", "components", "lib"],
@@ -234,52 +234,52 @@ export function createFrameworkLintConfig(moduleFiles) {
 }
 
 /**
- * A copy-assembled item is copied into the host as-is, so it must compile
- * against the framework surface plus the other installed items alone. Item and
- * layer both come from the file path (ADR-070 D1/D2), and the layer decides
+ * A copy-assembled module is copied into the host as-is, so it must compile
+ * against the framework surface plus the other installed modules alone. Module
+ * and layer both come from the file path (ADR-070 D1/D2), and the layer decides
  * which layers it may import: a widget may compose features and widgets, a
  * feature never reaches into a widget, and `components`/`lib` compose neither.
  * The rule also sees relative and dynamic imports, which `no-restricted-imports`
  * cannot compare by specifier text (R87-03).
  */
-const itemBoundaryPlugin = {
+const moduleBoundaryPlugin = {
   rules: {
-    "item-boundary": {
+    layers: {
       meta: {
         type: "problem",
         schema: [
           {
             type: "object",
-            properties: { items: { type: "array", items: { type: "string" } } },
-            required: ["items"],
+            properties: { modules: { type: "array", items: { type: "string" } } },
+            required: ["modules"],
             additionalProperties: false,
           },
         ],
         messages: {
           widget: `${MODULE_BOUNDARY_MESSAGE} Widgets compose features, never the reverse.`,
           direction: `${MODULE_BOUNDARY_MESSAGE} A shared layer composes no feature; pass data in through props.`,
-          unknown: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host file.`,
-          host: `${MODULE_BOUNDARY_MESSAGE} Import another installed item, not a host file.`,
+          unknown: `${MODULE_BOUNDARY_MESSAGE} Import another installed module, not a host file.`,
+          host: `${MODULE_BOUNDARY_MESSAGE} Import another installed module, not a host file.`,
         },
       },
       create(context) {
-        const [{ items }] = context.options;
-        const installed = new Set(items);
+        const [{ modules }] = context.options;
+        const installed = new Set(modules);
         const projectRoot = context.cwd ?? process.cwd();
         const filename = path.isAbsolute(context.filename)
           ? context.filename
           : path.join(projectRoot, context.filename);
         const segments = path.relative(projectRoot, filename).split(path.sep);
-        const ownItem = segments[2];
-        const ownLayer = segments[3];
+        const ownModule = segments[3];
+        const ownLayer = segments[4];
         const allowed = LAYER_IMPORTS[ownLayer] ?? [];
 
         const report = (node, layer) => {
           const messageId = layer === "widgets" ? "widget" : "direction";
           context.report({ node, messageId });
         };
-        const checkLayer = (node, item, layer) => {
-          if (!installed.has(item)) {
+        const checkLayer = (node, module, layer) => {
+          if (!installed.has(module)) {
             context.report({ node, messageId: "unknown" });
             return;
           }
@@ -288,21 +288,21 @@ const itemBoundaryPlugin = {
         const check = (node) => {
           const specifier = node.source?.value;
           if (typeof specifier !== "string") return;
-          if (specifier.startsWith("@/items/")) {
-            const [, , item, layer] = specifier.split("/");
-            checkLayer(node, item, layer);
+          if (specifier.startsWith("@/fewbie/modules/")) {
+            const [, , , module, layer] = specifier.split("/");
+            checkLayer(node, module, layer);
             return;
           }
           if (!specifier.startsWith(".")) return;
           const target = path.resolve(path.dirname(filename), specifier);
           const relative = path.relative(projectRoot, target).split(path.sep).join("/");
-          // Relative imports stay inside the item or reach the framework surface.
-          if (relative.startsWith("src/fewbie/")) return;
-          if (!relative.startsWith(`${ITEM_PREFIX}${ownItem}/`)) {
+          // Relative imports stay inside the module or reach the framework surface.
+          if (relative.startsWith("src/fewbie/") && !relative.startsWith(MODULE_PREFIX)) return;
+          if (!relative.startsWith(`${MODULE_PREFIX}${ownModule}/`)) {
             context.report({ node, messageId: "host" });
             return;
           }
-          const layer = relative.split("/")[3];
+          const layer = relative.split("/")[4];
           if (!allowed.includes(layer)) report(node, layer);
         };
         return { ImportDeclaration: check, ImportExpression: check };
@@ -314,13 +314,13 @@ const itemBoundaryPlugin = {
 function moduleBoundaryConfig(moduleFiles) {
   if (moduleFiles.length === 0) return [];
 
-  const items = [...new Set(moduleFiles.map((file) => file.split("/")[2]))];
+  const modules = [...new Set(moduleFiles.map((file) => file.split("/")[3]))];
   return [
     {
       files: moduleFiles,
-      plugins: { "module-boundary": itemBoundaryPlugin },
+      plugins: { "module-boundary": moduleBoundaryPlugin },
       rules: {
-        "module-boundary/item-boundary": ["error", { items }],
+        "module-boundary/layers": ["error", { modules }],
         "no-restricted-globals": [
           "error",
           { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
@@ -369,7 +369,7 @@ function moduleBoundaryConfig(moduleFiles) {
             message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
           },
         ],
-        // R7: an item has no i18n of its own; copy arrives through labels.
+        // R7: a module has no i18n of its own; copy arrives through labels.
         "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
       },
     },

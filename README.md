@@ -39,7 +39,7 @@ Without them the hook is a no-op.
 
 ## Web monitor (optional, browser side)
 
-The monitor is a registry item, not part of the skeleton. Install it, then mount
+The monitor is a registry module, not part of the skeleton. Install it, then mount
 the component in your own layout or provider:
 
 ```bash

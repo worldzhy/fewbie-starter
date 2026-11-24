@@ -17,6 +17,29 @@ export type Locale = (typeof routing.locales)[number];
 const LOCALE_COOKIE = "NEXT_LOCALE";
 
 /**
+ * Derived cache of the account's display timezone (ADR-077).
+ *
+ * The account record is the source of truth; this cookie only lets the server
+ * render the first paint in the right zone. Hosts write it after the account
+ * value is persisted (or after auto-detecting the browser zone). Missing or
+ * invalid values fall back to UTC so a server render is always deterministic.
+ */
+export const TIMEZONE_COOKIE = "NEXT_TIMEZONE";
+
+const FALLBACK_TIME_ZONE = "UTC";
+
+/** An IANA zone name is only accepted when the runtime can format with it. */
+function resolveTimeZone(cookieValue: string | undefined): string {
+  if (!cookieValue) return FALLBACK_TIME_ZONE;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: cookieValue });
+    return cookieValue;
+  } catch {
+    return FALLBACK_TIME_ZONE;
+  }
+}
+
+/**
  * Framework namespace of one locale.
  *
  * The import used to fall back to `{}` on any failure, so a host that upgraded
@@ -47,9 +70,13 @@ async function loadFrameworkMessages(locale: Locale): Promise<Record<string, unk
 // an internal `/{locale}/...` path that a flat route tree cannot serve. The
 // locale is resolved from the NEXT_LOCALE cookie (see `LOCALE_COOKIE`); mount
 // `src/components/locale-switcher.tsx` in the host header to write it.
+// The display timezone travels the same way through `TIMEZONE_COOKIE`
+// (ADR-077): the account preference is the source of truth, the cookie only
+// keeps the server-rendered first paint in the zone the client shows.
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
-  const cookieLocale = (await cookies()).get(LOCALE_COOKIE)?.value;
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
 
   let locale: Locale = routing.defaultLocale;
   if (hasLocale(routing.locales, requested)) {
@@ -66,6 +93,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
+    timeZone: resolveTimeZone(cookieStore.get(TIMEZONE_COOKIE)?.value),
     messages: { ...hostMessages, framework: frameworkMessages },
   };
 });

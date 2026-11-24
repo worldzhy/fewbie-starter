@@ -11,11 +11,16 @@ import { before, mock, test } from "node:test";
  * `src/fewbie/i18n/` surface (ADR-070 D3).
  */
 let cookieLocale: string | undefined;
+let cookieTimeZone: string | undefined;
 
 mock.module("next/headers", {
   namedExports: {
     cookies: async () => ({
-      get: (name: string) => (name === "NEXT_LOCALE" && cookieLocale ? { value: cookieLocale } : undefined),
+      get: (name: string) => {
+        if (name === "NEXT_LOCALE" && cookieLocale) return { value: cookieLocale };
+        if (name === "NEXT_TIMEZONE" && cookieTimeZone) return { value: cookieTimeZone };
+        return undefined;
+      },
     }),
   },
 });
@@ -26,6 +31,7 @@ mock.module("next-intl/server", {
 
 interface RequestConfig {
   locale: string;
+  timeZone: string;
   messages: Record<string, unknown> & { framework: Record<string, unknown> };
 }
 
@@ -80,4 +86,22 @@ test("host and framework messages land in the same config", async () => {
   assert.ok("home" in messages, "host namespace is missing");
   const framework = messages.framework as { common: Record<string, string> };
   assert.equal(framework.common.done, "Done");
+});
+
+test("the timezone cookie becomes the request time zone", async () => {
+  cookieTimeZone = "Asia/Shanghai";
+  const { timeZone } = await requestConfig({ requestLocale: Promise.resolve("en") });
+  assert.equal(timeZone, "Asia/Shanghai");
+});
+
+test("an invalid timezone cookie falls back to UTC", async () => {
+  cookieTimeZone = "Mars/Olympus_Mons";
+  const { timeZone } = await requestConfig({ requestLocale: Promise.resolve("en") });
+  assert.equal(timeZone, "UTC");
+});
+
+test("an absent timezone cookie falls back to UTC", async () => {
+  cookieTimeZone = undefined;
+  const { timeZone } = await requestConfig({ requestLocale: Promise.resolve("en") });
+  assert.equal(timeZone, "UTC");
 });

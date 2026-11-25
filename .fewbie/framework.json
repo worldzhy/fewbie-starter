@@ -42,7 +42,7 @@
     "src/fewbie/framework/forms/date-picker.tsx": "ca0bf64ebc7eb55728fbdd5fe5ffa2945d5f656617da0a190e3a48dd9457dbc9",
     "src/fewbie/framework/page/page-header.tsx": "291a7a23ea1c4a2266eb42c648711016afeb4b70c323169299cae66e91f680e8",
     "src/fewbie/framework/page/page-shell.tsx": "ab5055bb94078f2dcfea35dfdc7deebcbffd68cf7e45f3f8199b05cf377ec2dd",
-    "src/fewbie/framework/page/section-tabs.tsx": "b8f449953afcd3105fd4af2235270b3bf053bd55f206dca3b40890ca990f2f98",
+    "src/fewbie/framework/page/section-tabs.tsx": "ed321dad720ff3ac6b495c333387bf14aed976430fc4ac4adafa042fd32a2fb7",
     "src/fewbie/framework/shell/sidebar-chrome.tsx": "14180cda7ce5b85dc456dc5b2115820fbd9b8ed86857678eda64b26b4c6dbfc4",
     "src/fewbie/framework/shell/sidebar-shell.tsx": "d71dbc6cc79a6cc5ea2de4eaded1705f340fbfd954a3bdc665429b8bff365489",
     "src/fewbie/framework/shell/use-sidebar-collapsed.ts": "6a08902d63664f2c575f243eba5296c124d00ebaf112b03036719af9e86ab4a6",

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "bd6e09397380b939069daabf45e7bfae99a8855dfd988abc99a947b4dfacea2e",
+  "digest": "e5cc5dceb7da31639361a254608e935bc454c8bde97b293364bf13f146f990eb",
   "files": {
     "components.json": "f7b99fc19635aa09fb59432ed5c6b6084c57421804fba2544105fe258759f6ee",
     "eslint.config.mjs": "271ee370917f707ef6f1df1bfeef696da43a3b42ce7201880b1f107c80de1f61",
@@ -38,7 +38,7 @@
     "src/fewbie/framework/feedback/confirm-dialog.tsx": "88fce7c320961abddbd6e4b513f8cad20e0391b124e7ad59f125dac342c8462b",
     "src/fewbie/framework/feedback/inline-error-text.tsx": "1185ca6d4291e02175c3a423dd6d05947b1eea44cb6b01245db0f1f32e2c3505",
     "src/fewbie/framework/feedback/inline-result.tsx": "0b61d961cc647a7cf00565ab51edac051ff6c33fb7557d312f1b1d8b80314c05",
-    "src/fewbie/framework/feedback/navigation-progress.tsx": "291f5957fbb2701202e0160bc884c7c1a6911409ec4805778628589f8ef9fd2e",
+    "src/fewbie/framework/feedback/navigation-progress.tsx": "d6db898e9bf5d6b6ae977218a5dccdd601d98db98fb1465f85ff0e54ec420e25",
     "src/fewbie/framework/forms/date-picker.tsx": "ca0bf64ebc7eb55728fbdd5fe5ffa2945d5f656617da0a190e3a48dd9457dbc9",
     "src/fewbie/framework/page/page-header.tsx": "291a7a23ea1c4a2266eb42c648711016afeb4b70c323169299cae66e91f680e8",
     "src/fewbie/framework/page/page-shell.tsx": "ab5055bb94078f2dcfea35dfdc7deebcbffd68cf7e45f3f8199b05cf377ec2dd",

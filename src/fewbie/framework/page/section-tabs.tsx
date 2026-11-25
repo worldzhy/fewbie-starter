@@ -2,9 +2,10 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "cn";
 import { Tabs, TabsList, TabsTrigger } from "@/fewbie/ui/tabs";
+import { useRouteNavigate } from "@/fewbie/framework/feedback/navigation-progress";
 
 export type SectionTabItem = {
   href: string;
@@ -26,7 +27,7 @@ export default function SectionTabs({
   className?: string;
 }) {
   const pathname = usePathname() ?? "";
-  const router = useRouter();
+  const navigate = useRouteNavigate();
   // A mouse/Enter click goes through the Link, which already navigates. The
   // flag lets `onValueChange` skip that duplicate push while still handling
   // keyboard tab selection, which never clicks the anchor (R82-20).
@@ -47,7 +48,7 @@ export default function SectionTabs({
           navigatedByLink.current = false;
           return;
         }
-        router.push(href);
+        navigate(href);
       }}
       className={cn(className)}
     >

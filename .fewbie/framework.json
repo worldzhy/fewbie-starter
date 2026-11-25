@@ -1,7 +1,7 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "8252def1c12242edc64dcda15cc9302b7b1e4f809bb24e911010bbccaf886f1d",
+  "digest": "bb152f15f2899448c5fc5330f05f3dc91642333b286c87ae97ff79734148edc6",
   "files": {
     "components.json": "f7b99fc19635aa09fb59432ed5c6b6084c57421804fba2544105fe258759f6ee",
     "eslint.config.mjs": "1eb4b71e8c87aa5ee552c42373af87bf17706f99515eef76d66f3578fc9f2f60",
@@ -42,7 +42,7 @@
     "src/fewbie/framework/forms/date-picker.tsx": "ca0bf64ebc7eb55728fbdd5fe5ffa2945d5f656617da0a190e3a48dd9457dbc9",
     "src/fewbie/framework/page/page-header.tsx": "291a7a23ea1c4a2266eb42c648711016afeb4b70c323169299cae66e91f680e8",
     "src/fewbie/framework/page/page-shell.tsx": "ab5055bb94078f2dcfea35dfdc7deebcbffd68cf7e45f3f8199b05cf377ec2dd",
-    "src/fewbie/framework/page/section-tabs.tsx": "b8f449953afcd3105fd4af2235270b3bf053bd55f206dca3b40890ca990f2f98",
+    "src/fewbie/framework/page/section-tabs.tsx": "ed321dad720ff3ac6b495c333387bf14aed976430fc4ac4adafa042fd32a2fb7",
     "src/fewbie/framework/shell/sidebar-chrome.tsx": "14180cda7ce5b85dc456dc5b2115820fbd9b8ed86857678eda64b26b4c6dbfc4",
     "src/fewbie/framework/shell/sidebar-shell.tsx": "d71dbc6cc79a6cc5ea2de4eaded1705f340fbfd954a3bdc665429b8bff365489",
     "src/fewbie/framework/shell/use-sidebar-collapsed.ts": "6a08902d63664f2c575f243eba5296c124d00ebaf112b03036719af9e86ab4a6",
@@ -51,7 +51,7 @@
     "src/fewbie/framework/states/loading-state.tsx": "0c4eb5b30875224a4c8f601a8eb2e94f768da4d2e7299401d3667692031dbccf",
     "src/fewbie/framework/theme/theme-provider.tsx": "385244661d0bd964d3883c85ac4d8cacf016c83658973a1767f463374284b115",
     "src/fewbie/framework/theme/theme.ts": "f0fb3e09313d333b24e6d569a8b45b57114ef77c84c9c2914d348e4bb1eab98a",
-    "src/fewbie/i18n/config.ts": "961de4210ed061ea7b1c82d9adbbe7167fe0b854bff6290f4f9189383f0799db",
+    "src/fewbie/i18n/config.ts": "96d8cdcd62ea9afeb18ae2b2d336912327cd6696ba2294dbfe5dff1fa8a08ea2",
     "src/fewbie/ui/accordion.tsx": "51a2140e471a65804cfa1cc6d12e4860dfaf58bd3c6eb1185011ba6838cbaf94",
     "src/fewbie/ui/alert-dialog.tsx": "54001c26ff63d31a2147c2ed4a91db5670e4f524e604bacceb58fa41630318f8",
     "src/fewbie/ui/alert.tsx": "3299e0245e83800c750fa53ec1e7eeb1f11e5b5acbac05367fc214b4974e6f87",

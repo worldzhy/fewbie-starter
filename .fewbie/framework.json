@@ -1,7 +1,7 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "1c6abd68f2dc25979b4df87bd6d50c2edcec86c8ec53d2a7c2bfa0b30a9ed433",
+  "digest": "bb152f15f2899448c5fc5330f05f3dc91642333b286c87ae97ff79734148edc6",
   "files": {
     "components.json": "f7b99fc19635aa09fb59432ed5c6b6084c57421804fba2544105fe258759f6ee",
     "eslint.config.mjs": "1eb4b71e8c87aa5ee552c42373af87bf17706f99515eef76d66f3578fc9f2f60",

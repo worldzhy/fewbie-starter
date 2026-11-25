@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@devbie/heartbeat-sdk": "^1.2.1",
+    "@tanstack/react-query": "^5.108.4",
     "axios": "^1.21.0",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",

@@ -57,6 +57,29 @@ when both env vars are set (see `.env.example`):
 `next build`, not only at runtime. Without both the component is a no-op
 (it warns in development only).
 
+## Data and session
+
+The template owns one data mechanism (devbie ADR-079): business data is fetched
+in the browser, never during the RSC render.
+
+- `src/lib/api-client/**` is the axios transport: in-memory access token, the
+  httpOnly refresh cookie exchanged at `/auth/refresh-session`, one silent
+  refresh + replay on 401, and one error channel the host subscribes a toast to.
+- `src/fewbie/framework/providers/query-provider.tsx` is mounted by the
+  framework root layout, so `useQuery`/`useMutation` work in every host without
+  host wiring. Nest your own `QueryClientProvider` in `src/app/host-providers.tsx`
+  only to override the defaults.
+- `src/app/page.tsx` is the reference page: a client component with one
+  `useQuery` through `apiClient`, a domain query-key constant (R11) and the
+  shared loading/empty/error states. It queries `GET /account/me`; point it at
+  your own endpoint and keep the shape. RSC stays a shell (layout, i18n, chrome).
+
+A registry module may import the npm packages it declares in
+`fewbie.module.json: dependencies` (the CLI records them in `fewbie.lock.json`).
+Host-only packages (`next`, `next-intl`, `axios`, `sonner`, `swr`, `@radix-ui/*`)
+stay banned inside modules: the host adapter injects navigation, copy and
+notifications.
+
 ## Language switcher
 
 `src/components/locale-switcher.tsx` is a reference control for the

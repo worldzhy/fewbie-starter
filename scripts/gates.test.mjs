@@ -195,10 +195,13 @@ test("the root layout mounts TooltipProvider around the subtree", async () => {
 // host to remember.
 test("the root layout mounts the framework providers", async () => {
   const layout = await readFile(new URL("src/app/layout.tsx", repoRoot), "utf8");
-  for (const provider of ["ThemeProvider", "ConfirmProvider", "NavigationProgressProvider"]) {
+  for (const provider of ["ThemeProvider", "ConfirmProvider", "NavigationProgressProvider", "QueryProvider"]) {
     assert.match(layout, new RegExp(`<${provider}[\\s>]`), `${provider} must be mounted in the root layout`);
   }
   assert.match(layout, /<ThemeProvider initialTheme=\{theme\}>/);
+  // ADR-079 D3: a registry module may call useQuery in every host, so the
+  // QueryClient lifecycle is the framework's, not the host's.
+  assert.match(layout, /<QueryProvider>[\s\S]*<HostProviders>\{children\}<\/HostProviders>[\s\S]*<\/QueryProvider>/);
 });
 
 test("the tooltip primitive uses popover tokens the theme defines", async () => {

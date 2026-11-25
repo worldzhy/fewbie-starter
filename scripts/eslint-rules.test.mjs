@@ -259,8 +259,8 @@ test("registry modules may only reach the framework surface and installed module
     "next/navigation",
     "next-intl",
     "axios",
-    "@tanstack/react-query",
     "sonner",
+    "swr",
     "@/i18n/request",
     "@/components/host-widget",
   ]) {
@@ -271,12 +271,57 @@ test("registry modules may only reach the framework surface and installed module
     assert.ok(errors(messages, "no-restricted-imports").length >= 1, `${source} must be rejected inside a module`);
   }
 
+  // @tanstack/* is no longer host-only: it is rejected only until the module
+  // declares it (ADR-079 D4/D5).
+  const undeclaredQuery = await lintFixture(
+    { [LOGIN_PAGE]: 'import { useQuery } from "@tanstack/react-query";\nexport const value = useQuery;' },
+    INSTALLED_ITEMS,
+  );
+  assert.ok(errors(undeclaredQuery, "module-boundary/packages").length >= 1);
+
   // A host file is never an installed module: `src/fewbie/modules/**` is registry payload only.
   const hostFeature = await lintFixture(
     { [LOGIN_PAGE]: 'import { load } from "@/fewbie/modules/user/features/api";\nexport const value = load;' },
     INSTALLED_ITEMS,
   );
   assert.ok(errors(hostFeature, "module-boundary/layers").some((message) => message.text.includes("not a host file")));
+});
+
+test("registry modules may import the npm packages they declare", async () => {
+  const moduleEntry = { name: "account-access", files: [LOGIN_PAGE], dependencies: ["@tanstack/react-query"] };
+  const declared = await lintFixture(
+    {
+      [LOGIN_PAGE]: `
+      import { useQuery } from "@tanstack/react-query";
+      import { KeyRound } from "lucide-react";
+      export const value = [useQuery, KeyRound];
+    `,
+    },
+    [moduleEntry],
+  );
+  assert.deepEqual(errors(declared), []);
+
+  // A manifest carries a version range; the declaration is the package name.
+  const ranged = await lintFixture(
+    { [LOGIN_PAGE]: 'import { useQuery } from "@tanstack/react-query";\nexport const value = useQuery;' },
+    [{ name: "account-access", files: [LOGIN_PAGE], dependencies: ["@tanstack/react-query@^5.90.0"] }],
+  );
+  assert.deepEqual(errors(ranged), []);
+
+  // The declaration covers its own module only.
+  const otherModule = "src/fewbie/modules/password-checklist/components/password-checklist/index.ts";
+  const undeclaredElsewhere = await lintFixture(
+    { [otherModule]: 'import { useQuery } from "@tanstack/react-query";\nexport const value = useQuery;' },
+    [moduleEntry, { name: "password-checklist", files: [otherModule], dependencies: [] }],
+  );
+  assert.ok(errors(undeclaredElsewhere, "module-boundary/packages").length >= 1);
+
+  // Host-only packages stay banned even when a module declares them.
+  const declaredHostOnly = await lintFixture(
+    { [LOGIN_PAGE]: 'import { toast } from "sonner";\nexport const value = toast;' },
+    [{ name: "account-access", files: [LOGIN_PAGE], dependencies: ["sonner"] }],
+  );
+  assert.ok(errors(declaredHostOnly, "no-restricted-imports").length >= 1);
 });
 
 test("registry modules cannot fetch on their own", async () => {

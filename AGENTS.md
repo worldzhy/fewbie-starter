@@ -18,6 +18,8 @@ This repository is a [fewbie](https://github.com/worldzhy/devbie) application (N
 
 - Add shadcn/ui primitives with `npx shadcn@latest add <component>`.
 - Add business components and logic utils with `npx fewbie modules add <name>`.
+- Fetch business data in client components with `useQuery`/`useMutation` from `@tanstack/react-query`; the framework root layout mounts `QueryProvider`, and RSC stays a shell (layout, i18n, chrome).
+- Declare every npm package a registry module imports in `fewbie.module.json: dependencies`; host-only packages (`next`, `next-intl`, `axios`, `sonner`, `swr`, `@radix-ui/*`) stay banned inside modules.
 - Keep host Next.js config in `next.config.ts` by passing it to `withFewbie()`; framework defaults (host-overridable) and invariants (not overridable) live in `next.config.framework.ts`.
 - Keep host entries outside the `fewbie:framework` blocks: project instructions here, host variables in `.env.example`, host ignores in `.prettierignore`.
 - Remember that `NEXT_PUBLIC_*` variables are inlined at build time; set them before `npm run build`.

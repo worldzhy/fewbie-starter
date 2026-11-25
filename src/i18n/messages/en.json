@@ -2,7 +2,14 @@
   "home": {
     "title": "fewbie",
     "description": "Basic template: Next.js App Router + Tailwind CSS + shadcn/ui.",
-    "editHint": "Edit src/app/page.tsx to start building.",
-    "docs": "shadcn/ui docs"
+    "editHint": "Edit src/app/page.tsx to start building. The account card below is the reference shape for a data page.",
+    "docs": "shadcn/ui docs",
+    "accountTitle": "Current account",
+    "accountDescription": "Rendered by one useQuery through the framework api-client (reference query).",
+    "accountEmail": "Email",
+    "accountPhone": "Phone",
+    "accountMissingValue": "Not set",
+    "accountEmptyTitle": "No account data",
+    "accountErrorTitle": "Could not load the current account"
   }
 }

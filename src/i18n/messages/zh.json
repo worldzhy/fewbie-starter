@@ -2,7 +2,14 @@
   "home": {
     "title": "fewbie",
     "description": "基础模板：Next.js App Router + Tailwind CSS + shadcn/ui。",
-    "editHint": "编辑 src/app/page.tsx 开始构建。",
-    "docs": "shadcn/ui 文档"
+    "editHint": "编辑 src/app/page.tsx 开始构建。下方的账号卡片就是数据页面的参考写法。",
+    "docs": "shadcn/ui 文档",
+    "accountTitle": "当前账号",
+    "accountDescription": "由一次 useQuery 通过框架 api-client 取数（参考查询）。",
+    "accountEmail": "邮箱",
+    "accountPhone": "手机号",
+    "accountMissingValue": "未设置",
+    "accountEmptyTitle": "暂无账号数据",
+    "accountErrorTitle": "当前账号加载失败"
   }
 }

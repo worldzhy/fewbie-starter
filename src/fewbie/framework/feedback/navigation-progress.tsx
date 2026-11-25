@@ -9,8 +9,11 @@ type NavigationProgress = {
    * Client navigation that marks the route transition pending immediately, so
    * the progress bar appears on click rather than once the destination route
    * has been compiled and fetched.
+   *
+   * Accepts Next.js router options (scroll, shallow, ...) plus a convenience
+   * `replace` flag that mirrors `router.replace` vs `router.push` selection.
    */
-  navigate: (href: string, options?: { replace?: boolean }) => void;
+  navigate: (href: string, options?: { replace?: boolean; scroll?: boolean; shallow?: boolean }) => void;
 };
 
 const NavigationProgressContext = createContext<NavigationProgress | null>(null);
@@ -43,10 +46,11 @@ export function NavigationProgressProvider({ children }: { children: React.React
   }
 
   const navigate = useCallback(
-    (href: string, options?: { replace?: boolean }) => {
+    (href: string, options?: { replace?: boolean; scroll?: boolean; shallow?: boolean }) => {
+      const { replace, ...nextOptions } = options ?? {};
       startTransition(() => {
-        if (options?.replace) router.replace(href);
-        else router.push(href);
+        if (replace) router.replace(href, nextOptions);
+        else router.push(href, nextOptions);
       });
     },
     [router],

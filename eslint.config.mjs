@@ -31,12 +31,18 @@ const MODULE_BOUNDARY_MESSAGE =
   "modules installed next to it; host i18n, router, transport, toast and state belong in the host adapter (module boundary).";
 
 /**
- * Files the lockfile records as installed modules. Copy-assembled modules may
- * only depend on the framework surface and other installed modules, so
- * transport, i18n, router, toast and state libraries stay in the host adapter
- * that renders them (ADR-057, ADR-062, ADR-069, ADR-070).
+ * Installed registry modules from the lockfile: payload files plus the npm
+ * packages each module declared in `fewbie.module.json: dependencies`.
+ *
+ * Copy-assembled modules may only depend on the framework surface, other
+ * installed modules and the packages they declare, so transport, i18n, router,
+ * toast and state libraries stay in the host adapter that renders them
+ * (ADR-057, ADR-062, ADR-069, ADR-070). Declared packages are the exception
+ * (devbie ADR-079 D4/D5): a module that ships `useQuery` declares
+ * `@tanstack/react-query`, and the host lint reads that declaration here
+ * instead of banning the package wholesale.
  */
-function installedModuleFiles() {
+function installedModules() {
   let lockfile;
   try {
     lockfile = JSON.parse(readFileSync(LOCKFILE, "utf8"));
@@ -51,7 +57,7 @@ function installedModuleFiles() {
   if (modules === null || typeof modules !== "object" || Array.isArray(modules)) {
     throw new Error("fewbie.lock.json is malformed: `modules` must be an object. Run `npx fewbie modules update`.");
   }
-  return Object.values(modules).flatMap((module) => {
+  return Object.entries(modules).map(([name, module]) => {
     if (module === null || typeof module !== "object" || Array.isArray(module)) {
       throw new Error("fewbie.lock.json is malformed: every module entry must be an object.");
     }
@@ -59,8 +65,69 @@ function installedModuleFiles() {
     if (files === null || typeof files !== "object" || Array.isArray(files)) {
       throw new Error("fewbie.lock.json is malformed: every module `files` must be an object.");
     }
-    return Object.keys(files).filter((file) => file.startsWith(MODULE_PREFIX));
+    const dependencies = module.dependencies ?? [];
+    if (!Array.isArray(dependencies) || dependencies.some((entry) => typeof entry !== "string")) {
+      throw new Error(
+        "fewbie.lock.json is malformed: every module `dependencies` must be an array of package names. " +
+          "Run `npx fewbie modules update`.",
+      );
+    }
+    return {
+      name,
+      files: Object.keys(files).filter((file) => file.startsWith(MODULE_PREFIX)),
+      dependencies,
+    };
   });
+}
+
+/** Files the lockfile records as installed modules, across every module. */
+function installedModuleFiles(modules) {
+  return modules.flatMap((module) => module.files);
+}
+
+/**
+ * Module descriptor from a lockfile entry or a bare file path (test fixtures).
+ * Dependency entries may carry a version range, so they are reduced to names.
+ */
+function normalizeModule(entry) {
+  const descriptor =
+    typeof entry === "string"
+      ? { name: entry.split("/")[3] ?? "", files: [entry], dependencies: [] }
+      : { ...entry, dependencies: entry.dependencies ?? [] };
+  return { ...descriptor, dependencies: descriptor.dependencies.map(dependencyName) };
+}
+
+/**
+ * npm package a bare import specifier resolves to; null for relative and
+ * `@/`-aliased imports, which other rules decide.
+ */
+function importedPackage(specifier) {
+  if (specifier.startsWith(".") || specifier.startsWith("@/")) return null;
+  return specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
+}
+
+/** Package name of a lockfile dependency entry (`name` or `name@range`). */
+function dependencyName(entry) {
+  const separator = entry.indexOf("@", entry.startsWith("@") ? 1 : 0);
+  return separator <= 0 ? entry : entry.slice(0, separator);
+}
+
+/**
+ * Packages any module may import: React itself and the icon set the template
+ * ships, so the boundary gate does not force a manifest entry for them.
+ */
+const MODULE_FRAMEWORK_PACKAGES = ["react", "react-dom", "lucide-react"];
+
+/** Host-only packages a module never imports; the adapter passes them in (ADR-079 D4). */
+function isHostOnlyPackage(name) {
+  return (
+    name === "next" ||
+    name === "next-intl" ||
+    name === "axios" ||
+    name === "sonner" ||
+    name === "swr" ||
+    name.startsWith("@radix-ui/")
+  );
 }
 
 /** Layers a module at `layer` may import from any installed module (ADR-069 D4). */
@@ -133,7 +200,9 @@ const OFF_SCALE_SYNTAX = [
   },
 ];
 
-export function createFrameworkLintConfig(moduleFiles) {
+export function createFrameworkLintConfig(installed = []) {
+  const modules = installed.map(normalizeModule);
+  const moduleFiles = installedModuleFiles(modules);
   return [
     {
       files: HOST_CODE,
@@ -229,7 +298,7 @@ export function createFrameworkLintConfig(moduleFiles) {
         "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
       },
     },
-    ...moduleBoundaryConfig(moduleFiles),
+    ...moduleBoundaryConfig(modules),
   ];
 }
 
@@ -244,6 +313,37 @@ export function createFrameworkLintConfig(moduleFiles) {
  */
 const moduleBoundaryPlugin = {
   rules: {
+    packages: {
+      meta: {
+        type: "problem",
+        schema: [
+          {
+            type: "object",
+            properties: { dependencies: { type: "array", items: { type: "string" } } },
+            required: ["dependencies"],
+            additionalProperties: false,
+          },
+        ],
+        messages: {
+          undeclared: `${MODULE_BOUNDARY_MESSAGE} "{{name}}" is not declared: add it to dependencies in fewbie.module.json.`,
+        },
+      },
+      create(context) {
+        const [{ dependencies }] = context.options;
+        const declared = new Set(dependencies);
+        const check = (node) => {
+          const specifier = node.source?.value;
+          if (typeof specifier !== "string") return;
+          const name = importedPackage(specifier);
+          // Host-only packages are reported by no-restricted-imports; relative
+          // and aliased imports are judged by the layers rule.
+          if (!name || isHostOnlyPackage(name)) return;
+          if (MODULE_FRAMEWORK_PACKAGES.includes(name) || declared.has(name)) return;
+          context.report({ node, messageId: "undeclared", data: { name } });
+        };
+        return { ImportDeclaration: check, ImportExpression: check };
+      },
+    },
     layers: {
       meta: {
         type: "problem",
@@ -311,71 +411,75 @@ const moduleBoundaryPlugin = {
   },
 };
 
-function moduleBoundaryConfig(moduleFiles) {
-  if (moduleFiles.length === 0) return [];
+function moduleBoundaryConfig(installed) {
+  const modules = installed.filter((module) => module.files.length > 0);
+  if (modules.length === 0) return [];
 
-  const modules = [...new Set(moduleFiles.map((file) => file.split("/")[3]))];
-  return [
-    {
-      files: moduleFiles,
-      plugins: { "module-boundary": moduleBoundaryPlugin },
-      rules: {
-        "module-boundary/layers": ["error", { modules }],
-        "no-restricted-globals": [
-          "error",
-          { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
-          { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
-        ],
-        "no-restricted-imports": [
-          "error",
-          {
-            patterns: [
-              {
-                group: ["next", "next/*", "next-intl", "next-intl/*"],
-                message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
-              },
-              {
-                group: ["axios", "@tanstack/*", "swr", "sonner", "@radix-ui/*"],
-                message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
-              },
-              {
-                group: [
-                  "@/app/*",
-                  "@/api",
-                  "@/api/*",
-                  "@/i18n/*",
-                  "@/hooks/*",
-                  "@/store/*",
-                  "@/types/*",
-                  "@/components/*",
-                  "@/lib/*",
-                  "!@/lib/utils",
-                  "!@/lib/api-client",
-                  "!@/lib/api-client/*",
-                ],
-                message: MODULE_BOUNDARY_MESSAGE,
-              },
-            ],
-          },
-        ],
-        "no-restricted-syntax": [
-          "error",
-          {
-            selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr|@tanstack\\/.*)$/]",
-            message: MODULE_BOUNDARY_MESSAGE,
-          },
-          {
-            selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
-            message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
-          },
-        ],
-        // R7: a module has no i18n of its own; copy arrives through labels.
-        "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
-      },
+  const installedNames = modules.map((module) => module.name);
+  return modules.map((module) => ({
+    files: module.files,
+    plugins: { "module-boundary": moduleBoundaryPlugin },
+    rules: {
+      "module-boundary/layers": ["error", { modules: installedNames }],
+      // ADR-079 D4/D5: declared npm packages are importable; anything else
+      // that is not an import must still be declared in the manifest.
+      "module-boundary/packages": ["error", { dependencies: module.dependencies }],
+      "no-restricted-globals": [
+        "error",
+        { name: "fetch", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+        { name: "XMLHttpRequest", message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.` },
+      ],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["next", "next/*", "next-intl", "next-intl/*"],
+              message: `${MODULE_BOUNDARY_MESSAGE} Receive navigation and copy through props.`,
+            },
+            {
+              // Host-only packages stay banned; `@tanstack/*` moved to the
+              // declared-dependency rule so a module may ship its own queries.
+              group: ["axios", "swr", "sonner", "@radix-ui/*"],
+              message: `${MODULE_BOUNDARY_MESSAGE} Receive data and notifications through ports.`,
+            },
+            {
+              group: [
+                "@/app/*",
+                "@/api",
+                "@/api/*",
+                "@/i18n/*",
+                "@/hooks/*",
+                "@/store/*",
+                "@/types/*",
+                "@/components/*",
+                "@/lib/*",
+                "!@/lib/utils",
+                "!@/lib/api-client",
+                "!@/lib/api-client/*",
+              ],
+              message: MODULE_BOUNDARY_MESSAGE,
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportExpression[source.value=/^(?:axios|next\\/.*|next-intl.*|sonner|swr)$/]",
+          message: MODULE_BOUNDARY_MESSAGE,
+        },
+        {
+          selector: 'CallExpression[callee.object.name=/^(?:window|globalThis|self)$/][callee.property.name="fetch"]',
+          message: `${MODULE_BOUNDARY_MESSAGE} Receive data through a port prop instead.`,
+        },
+      ],
+      // R7: a module has no i18n of its own; copy arrives through labels.
+      "react/jsx-no-literals": ["error", { allowedStrings: R7_ALLOWED_STRINGS }],
     },
-  ];
+  }));
 }
 
-export const frameworkLintConfig = createFrameworkLintConfig(installedModuleFiles());
+export const frameworkLintConfig = createFrameworkLintConfig(installedModules());
 
 export default [...base, ...next, ...frameworkLintConfig];

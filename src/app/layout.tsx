@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/fewbie/ui/tooltip";
 import { ConfirmProvider } from "@/fewbie/framework/feedback/confirm-dialog";
 import { ApiErrorToast } from "@/fewbie/framework/feedback/api-error-toast";
 import { NavigationProgressProvider } from "@/fewbie/framework/feedback/navigation-progress";
+import { QueryProvider } from "@/fewbie/framework/providers/query-provider";
 import { ThemeProvider } from "@/fewbie/framework/theme/theme-provider";
 import { normalizeTheme, THEME_COOKIE, type ThemePreference } from "@/fewbie/framework/theme/theme";
 import { type Locale } from "@/fewbie/i18n/config";
@@ -73,7 +74,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <ConfirmProvider>
               <NavigationProgressProvider>
                 <TooltipProvider>
-                  <HostProviders>{children}</HostProviders>
+                  {/* Browser-side data access (ADR-079 D3): the framework owns
+                      the QueryClient lifecycle so a registry module can call
+                      useQuery in every host without the host wiring it. */}
+                  <QueryProvider>
+                    <HostProviders>{children}</HostProviders>
+                  </QueryProvider>
                 </TooltipProvider>
               </NavigationProgressProvider>
             </ConfirmProvider>

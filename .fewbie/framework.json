@@ -1,7 +1,7 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "e5cc5dceb7da31639361a254608e935bc454c8bde97b293364bf13f146f990eb",
+  "digest": "0fc1910dcc62a0a348bcb8fd3e8d231ab853ab39cd11aef584b8f44d2373e727",
   "files": {
     "components.json": "f7b99fc19635aa09fb59432ed5c6b6084c57421804fba2544105fe258759f6ee",
     "eslint.config.mjs": "271ee370917f707ef6f1df1bfeef696da43a3b42ce7201880b1f107c80de1f61",
@@ -21,7 +21,7 @@
     "src/fewbie/framework/__tests__/dom.ts": "36f4fdc02eccd7102dc547bd6322897af53f875b81201e8b887930417e4afa27",
     "src/fewbie/framework/__tests__/feedback.test.tsx": "71f59ac4818473a61a4a84f3bb0c7e7068f10f1c7c875adaa7de1d8e3b900e48",
     "src/fewbie/framework/__tests__/instrumentation.test.ts": "2e13ad915e55730cc6181fcc7d77f34f28822b7cf6c869f6ff6e3483a2b4eb8d",
-    "src/fewbie/framework/__tests__/page.test.tsx": "c629f2927265f8bab3ada5ab8b9588a43f42099dd90b62fdf80cca53561a3f89",
+    "src/fewbie/framework/__tests__/page.test.tsx": "b6ec328f0ef54efd9ac56ccdb3b90c31a123d3a2be4aaeff1830d65579822538",
     "src/fewbie/framework/__tests__/states.test.tsx": "9fbf862ee4a77e725fdc3c026277669315f6cc824f374a08dc0d2722a23da6eb",
     "src/fewbie/framework/api-client/failure.test.ts": "da42e10f24e72f48a23be67ec8c3f3dbff78d6bfb207442c759523cb664c209d",
     "src/fewbie/framework/api-client/protocol.test.ts": "e9c07778a7f140e3f68c2e4840b454b99455b69be6127038eaadaaba816c977c",
@@ -42,6 +42,7 @@
     "src/fewbie/framework/forms/date-picker.tsx": "ca0bf64ebc7eb55728fbdd5fe5ffa2945d5f656617da0a190e3a48dd9457dbc9",
     "src/fewbie/framework/page/page-header.tsx": "291a7a23ea1c4a2266eb42c648711016afeb4b70c323169299cae66e91f680e8",
     "src/fewbie/framework/page/page-shell.tsx": "ab5055bb94078f2dcfea35dfdc7deebcbffd68cf7e45f3f8199b05cf377ec2dd",
+    "src/fewbie/framework/page/pagination-bar.tsx": "42e33e68454cd80a6226a3e3467a8f610d33c5b4bd54be370592529ecb1dd9e0",
     "src/fewbie/framework/page/section-tabs.tsx": "ed321dad720ff3ac6b495c333387bf14aed976430fc4ac4adafa042fd32a2fb7",
     "src/fewbie/framework/providers/query-provider.tsx": "2165496c1f5494f563c4e6e337b94fc5b968c5fcf0ed366a484f7e160ce48ba9",
     "src/fewbie/framework/shell/sidebar-chrome.tsx": "14180cda7ce5b85dc456dc5b2115820fbd9b8ed86857678eda64b26b4c6dbfc4",

@@ -51,9 +51,36 @@ function stripImports(source) {
 function defaultExportBody(code) {
   const match = code.match(DEFAULT_EXPORT_FUNCTION);
   if (!match) return null;
-  const open = code.indexOf("{", match.index + match[0].length);
+  const open = functionBodyBrace(code, match.index + match[0].length);
   if (open === -1) return null;
   return sliceBalanced(code, open + 1);
+}
+
+/**
+ * Index of the `{` that opens the function body. The parameter list may itself
+ * contain braces (`function Page({ params }: Props)`), so the search starts
+ * after the matching `)`.
+ */
+function functionBodyBrace(code, from) {
+  const paren = code.indexOf("(", from);
+  if (paren === -1) return -1;
+  let depth = 0;
+  let quote = null;
+  for (let index = paren; index < code.length; index += 1) {
+    const char = code[index];
+    if (quote) {
+      if (char === "\\") index += 1;
+      else if (char === quote) quote = null;
+      continue;
+    }
+    if (char === '"' || char === "'" || char === "`") quote = char;
+    else if (char === "(") depth += 1;
+    else if (char === ")") {
+      depth -= 1;
+      if (depth === 0) return code.indexOf("{", index + 1);
+    }
+  }
+  return -1;
 }
 
 /** Text between `start` and the `}` that closes the preceding `{`. */

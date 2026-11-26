@@ -1,7 +1,7 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "0f00cf77c9aab6c5f84250c9a1e479b04daff099221d807d666cb758c5d165e8",
+  "digest": "6201e4306a3ce6994dedf305750ecbfd445c3953aca179b8e8ab24b3d7ae50ad",
   "files": {
     "components.json": "f7b99fc19635aa09fb59432ed5c6b6084c57421804fba2544105fe258759f6ee",
     "eslint.config.mjs": "271ee370917f707ef6f1df1bfeef696da43a3b42ce7201880b1f107c80de1f61",
@@ -9,11 +9,11 @@
     "postcss.config.mjs": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
     "scripts/check-framework-adr.mjs": "3648189094907a335a1295bc0f00cf392d89321957d83f08e8eee17dd527a694",
     "scripts/check-layout-shell.mjs": "b8bbe346262ced0cd4adc57b60bc58d5168ea564325867b46832477798bcb9fd",
-    "scripts/check-page-contract.mjs": "6ad22611da9286810b4d051a1c2ad406f48319bf7d657ae67d99213a9123eaf8",
+    "scripts/check-page-contract.mjs": "9fdd4daca102507ede18ae0c7cc7d7e5bb9b47e448f7283170b7271360978b37",
     "scripts/check-primitives.mjs": "b7abaf5699ee6df234683beddabe85522ab7639dc175416003c6d70783e0610d",
     "scripts/check-route-conventions.mjs": "6142224360b1776df1914b6cc5e799e29e1f89f76030a6472beb0bbce1018f13",
     "scripts/eslint-rules.test.mjs": "004e6bd0440e7fcee2a4c8a4c4c90f477e36f2600877c77aa370aba22e444cdd",
-    "scripts/gates.test.mjs": "73727f35d5fb63b0ef7f81a092548d795d9f38974cc9e8bc1ecdd3900fdd88bb",
+    "scripts/gates.test.mjs": "9749565a90d79724d41718f2d4049c87389f26e1462385421d12adf63a25a678",
     "scripts/lib/walk.mjs": "5410ace36a4f81af89916f1d99e543dfd3c0ca1b470dcea5279fabb2397bebd3",
     "src/app/fonts/geist-mono-latin.woff2": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b",
     "src/app/fonts/inter-latin.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",

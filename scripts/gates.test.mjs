@@ -75,6 +75,13 @@ test("R1 only judges the default export, not helper components above it", () => 
     "}",
   ].join("\n");
   assert.equal(inspectPage(bracedEarly).length, 1);
+  // A destructured parameter contains braces; the body starts after the `)`.
+  const destructuredParams = [
+    "export default function Page({ params }: { params: Promise<{ id: string }> }) {",
+    '  return <PageShell title="Users" />;',
+    "}",
+  ].join("\n");
+  assert.deepEqual(inspectPage(destructuredParams), []);
   // A nested callback returning a raw element is not the page root.
   const callback = [
     "export default function Page() {",

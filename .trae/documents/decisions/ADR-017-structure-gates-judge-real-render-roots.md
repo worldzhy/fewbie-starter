@@ -48,3 +48,7 @@
 - `node --test --import tsx scripts/gates.test.mjs`：18 项全绿（含 3 项新增负/阳性对照）。
 - nightwatch-frontend 上运行修正后的页面门禁：报红集合从"6 个已合规页面 + 缺 5 个真实违规"变为 28 个真实违规文件，由 R108-03 逐个修复。
 - `check-primitives.mjs` 在 nightwatch 上不再报告 `components/analysis/blocks/index.tsx`，手工制造的真重复仍报红。
+
+## 更新记录
+
+- 2026-11-26：body 起点改为「参数列表的 `)` 之后」，`function Page({ params }: Props)` 的解构参数不再被误当作函数体；自测新增 1 例解构参数。该修正属实现细节，不改变本 ADR 的判定规则（R108-03 落地时发现）。

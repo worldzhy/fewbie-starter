@@ -42,6 +42,54 @@ test("R1 accepts a thin page that delegates to a component", () => {
   assert.deepEqual(inspectPage("export default function Page() { return <UserList />; }"), []);
 });
 
+test("R1 only judges the default export, not helper components above it", () => {
+  // Route files commonly define row/field helpers before the page; their roots
+  // are not the page's root (R108-03).
+  const withHelpers = [
+    "function KeyValue({ children }) {",
+    '  return <div className="space-y-1">{children}</div>;',
+    "}",
+    "function Row({ value }) {",
+    "  return value ? <span>{value}</span> : null;",
+    "}",
+    "export default function Page() {",
+    '  return <PageShell title="Users"><KeyValue><Row value="x" /></KeyValue></PageShell>;',
+    "}",
+  ].join("\n");
+  assert.deepEqual(inspectPage(withHelpers), []);
+  // An early raw return inside the page body is still the page's own root.
+  const earlyRaw = [
+    "export default function Page() {",
+    "  if (loading) return <div>Loading</div>;",
+    '  return <PageShell title="Users" />;',
+    "}",
+  ].join("\n");
+  assert.equal(inspectPage(earlyRaw).length, 1);
+  // A braced early return is still the page's own root.
+  const bracedEarly = [
+    "export default function Page() {",
+    "  if (loading) {",
+    "    return <div>Loading</div>;",
+    "  }",
+    '  return <PageShell title="Users" />;',
+    "}",
+  ].join("\n");
+  assert.equal(inspectPage(bracedEarly).length, 1);
+  // A nested callback returning a raw element is not the page root.
+  const callback = [
+    "export default function Page() {",
+    "  return (",
+    '    <PageShell title="Users">',
+    "      {rows.map((row) => {",
+    "        return <div key={row.id}>{row.name}</div>;",
+    "      })}",
+    "    </PageShell>",
+    "  );",
+    "}",
+  ].join("\n");
+  assert.deepEqual(inspectPage(callback), []);
+});
+
 test("R1 rejects a hand-written h1 and a raw JSX root", () => {
   assert.equal(inspectPage("export default function P() { return <main><h1>Users</h1></main>; }").length, 2);
   assert.equal(inspectPage("export default function P() { return <main>Users</main>; }").length, 1);

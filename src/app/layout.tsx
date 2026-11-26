@@ -78,15 +78,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                       the QueryClient lifecycle so a registry module can call
                       useQuery in every host without the host wiring it. */}
                   <QueryProvider>
-                    <HostProviders>{children}</HostProviders>
+                    <HostProviders>
+                      {/* The single api-client error subscriber (devbie
+                          ADR-080 D1): inside HostProviders so the host's
+                          ApiErrorMessageProvider (localized copy) reaches it,
+                          and mounted by the framework so every host has one
+                          without remembering to wire it (R82-17, R82-21). */}
+                      <ApiErrorToast />
+                      {children}
+                    </HostProviders>
                   </QueryProvider>
                 </TooltipProvider>
               </NavigationProgressProvider>
             </ConfirmProvider>
-            {/* Inside ThemeProvider so the toast can follow the active theme;
-                outside HostProviders so a host re-mounting its tree never drops
-                the api-client error subscription (R82-17, R82-21). */}
-            <ApiErrorToast />
             <Toaster
               position="top-right"
               duration={2000}

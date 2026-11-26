@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /**
- * R9: no new primitive copies under `src/components`.
+ * R9: no new primitive copies under `src/components` or `src/app`.
  *
  * `src/fewbie/ui/**` is framework-owned. A host component that exports a
  * name already exported by a primitive (or that duplicates another host
- * component) would silently fork the design system, so both cases fail here.
+ * component under `src/components`) would silently fork the design system,
+ * so both cases fail here. Route files under `src/app` legitimately repeat
+ * default component names, so there only primitive shadows are rejected.
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -41,9 +43,11 @@ export function exportedComponents(source) {
 /** Compare host components against the primitive set and against each other. */
 export async function checkPrimitives(root = process.cwd()) {
   const componentsRoot = path.join(root, "src", "components");
+  const appRoot = path.join(root, "src", "app");
   const primitivesRoot = path.join(root, "src", "fewbie", "ui");
   const hasComponents = await pathExists(componentsRoot);
-  if (!hasComponents && !(await pathExists(primitivesRoot))) return [];
+  const hasApp = await pathExists(appRoot);
+  if (!hasComponents && !hasApp && !(await pathExists(primitivesRoot))) return [];
 
   const primitiveNames = new Set();
   if (await pathExists(primitivesRoot)) {
@@ -52,33 +56,52 @@ export async function checkPrimitives(root = process.cwd()) {
       for (const name of exportedComponents(source)) primitiveNames.add(name);
     }
   }
-  if (!hasComponents) return [];
-
-  const hostFiles = await listFiles(componentsRoot, { extensions: [".tsx", ".ts"] });
 
   const violations = [];
-  const owner = new Map();
-  for (const file of hostFiles) {
-    const source = await readFile(path.join(componentsRoot, file), "utf8");
-    for (const name of exportedComponents(source)) {
-      if (primitiveNames.has(name)) {
-        violations.push({
-          file: `src/components/${file}`,
-          message: `re-exports primitive "${name}"; import it from @/fewbie/ui instead`,
-        });
-        continue;
-      }
-      const previous = owner.get(name);
-      if (previous) {
-        violations.push({
-          file: `src/components/${file}`,
-          message: `duplicates component "${name}" already defined in src/components/${previous}`,
-        });
-      } else {
-        owner.set(name, file);
+
+  // `src/components` owns reusable host components: no primitive shadows and no
+  // two files defining the same component name.
+  if (hasComponents) {
+    const owner = new Map();
+    for (const file of await listFiles(componentsRoot, { extensions: [".tsx", ".ts"] })) {
+      const source = await readFile(path.join(componentsRoot, file), "utf8");
+      for (const name of exportedComponents(source)) {
+        if (primitiveNames.has(name)) {
+          violations.push({
+            file: `src/components/${file}`,
+            message: `re-exports primitive "${name}"; import it from @/fewbie/ui instead`,
+          });
+          continue;
+        }
+        const previous = owner.get(name);
+        if (previous) {
+          violations.push({
+            file: `src/components/${file}`,
+            message: `duplicates component "${name}" already defined in src/components/${previous}`,
+          });
+        } else {
+          owner.set(name, file);
+        }
       }
     }
   }
+
+  // Route files repeat default component names (`Page`, `Layout`) by design, so
+  // `src/app` is only rejected when it shadows a framework primitive.
+  if (hasApp) {
+    for (const file of await listFiles(appRoot, { extensions: [".tsx", ".ts"] })) {
+      const source = await readFile(path.join(appRoot, file), "utf8");
+      for (const name of exportedComponents(source)) {
+        if (primitiveNames.has(name)) {
+          violations.push({
+            file: `src/app/${file}`,
+            message: `re-exports primitive "${name}"; import it from @/fewbie/ui instead`,
+          });
+        }
+      }
+    }
+  }
+
   return violations;
 }
 

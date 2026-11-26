@@ -1,7 +1,7 @@
 {
   "version": 1,
   "algorithm": "sha256",
-  "digest": "949ab955300805cbbe1adc5f13e05107a8dcd779ef9e101edcb4d6e82576f603",
+  "digest": "beee08632f9f3f76a41e41e8d1d1e23d9fa8f45c83f72ebd87bfa423f3aa1406",
   "files": {
     "components.json": "f7b99fc19635aa09fb59432ed5c6b6084c57421804fba2544105fe258759f6ee",
     "eslint.config.mjs": "5a5c3ab6e7b96f82dd5ceca327dfaa9eaad2403f5d5c935486923f3fe3c83c1d",
@@ -9,7 +9,7 @@
     "postcss.config.mjs": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
     "scripts/check-layout-shell.mjs": "b8bbe346262ced0cd4adc57b60bc58d5168ea564325867b46832477798bcb9fd",
     "scripts/check-page-contract.mjs": "9fdd4daca102507ede18ae0c7cc7d7e5bb9b47e448f7283170b7271360978b37",
-    "scripts/check-primitives.mjs": "b7abaf5699ee6df234683beddabe85522ab7639dc175416003c6d70783e0610d",
+    "scripts/check-primitives.mjs": "9c2e12aabfc0fe9d79c963dde7ed04134297fafca1864b210a5b591a6366432a",
     "scripts/check-route-conventions.mjs": "6142224360b1776df1914b6cc5e799e29e1f89f76030a6472beb0bbce1018f13",
     "scripts/eslint-rules.test.mjs": "004e6bd0440e7fcee2a4c8a4c4c90f477e36f2600877c77aa370aba22e444cdd",
     "scripts/gates.test.mjs": "b7afe1c3ef142185f61885c3e57dc381824003c1c25b79a3e1e4252ad2f99ef7",

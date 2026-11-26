@@ -10,7 +10,7 @@ import next from "@devbie/style-guide/eslint/next";
  * Rules live with the template, not in `@devbie/style-guide`, so a host adopts
  * them together with the framework files they describe: `template update`
  * replaces this file wholesale, and M4 migrates nightwatch against the same
- * rule set. R1/R5/R9/R10/R12 are scripts (see `scripts/`); the rules below are
+ * rule set. R1/R5/R9/R10 are scripts (see `scripts/`); the rules below are
  * the ones ESLint can express directly.
  *
  * File scopes are deliberate: `src/fewbie/ui/**` are upstream primitives and

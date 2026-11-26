@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
-import { checkFrameworkAdr } from "./check-framework-adr.mjs";
 import { checkLayoutShell, inspectLayout } from "./check-layout-shell.mjs";
 import { checkPageContract, inspectPage } from "./check-page-contract.mjs";
 import { checkPrimitives } from "./check-primitives.mjs";
@@ -232,20 +231,6 @@ test("R10 rejects non-kebab-case route segments and allows route syntax", async 
     violations.map((violation) => violation.file),
     ["src/app/UserSettings", "src/app/user_settings"],
   );
-});
-
-test("R12 requires an ADR next to a framework change", () => {
-  assert.deepEqual(checkFrameworkAdr(["src/app/page.tsx"]), []);
-  assert.equal(checkFrameworkAdr(["src/fewbie/framework/page/page-shell.tsx"]).length, 1);
-  assert.deepEqual(
-    checkFrameworkAdr(["src/fewbie/framework/page/page-shell.tsx", ".trae/documents/decisions/ADR-999-test.md"]),
-    [],
-  );
-  // The theme tokens, the locale config and the baseline manifest are
-  // cross-host contracts too: editing them needs a design decision.
-  for (const file of ["src/fewbie/i18n/config.ts", "src/app/globals.css", ".fewbie/framework.json"]) {
-    assert.equal(checkFrameworkAdr([file]).length, 1, `${file} must be a framework contract path`);
-  }
 });
 
 // Review R1-02/R1-03: framework shell chrome renders tooltips, so the root

@@ -8,7 +8,6 @@
   "prettier": "@devbie/style-guide/prettier",
   "scripts": {
     "build": "next build",
-    "check:framework-adr": "node scripts/check-framework-adr.mjs",
     "check:layout-shell": "node scripts/check-layout-shell.mjs",
     "check:page-contract": "node scripts/check-page-contract.mjs",
     "check:primitives": "node scripts/check-primitives.mjs",

@@ -184,10 +184,7 @@ const repoRoot = new URL("..", import.meta.url);
 
 test("the root layout mounts TooltipProvider around the subtree", async () => {
   const layout = await readFile(new URL("src/app/layout.tsx", repoRoot), "utf8");
-  assert.match(
-    layout,
-    /<TooltipProvider>[\s\S]*<HostProviders>\{children\}<\/HostProviders>[\s\S]*<\/TooltipProvider>/,
-  );
+  assert.match(layout, /<TooltipProvider>[\s\S]*<HostProviders>[\s\S]*<\/HostProviders>[\s\S]*<\/TooltipProvider>/);
 });
 
 // Review R1-12: the hooks these providers expose throw without a mount, so the
@@ -201,7 +198,16 @@ test("the root layout mounts the framework providers", async () => {
   assert.match(layout, /<ThemeProvider initialTheme=\{theme\}>/);
   // ADR-079 D3: a registry module may call useQuery in every host, so the
   // QueryClient lifecycle is the framework's, not the host's.
-  assert.match(layout, /<QueryProvider>[\s\S]*<HostProviders>\{children\}<\/HostProviders>[\s\S]*<\/QueryProvider>/);
+  assert.match(layout, /<QueryProvider>[\s\S]*<HostProviders>[\s\S]*<\/HostProviders>[\s\S]*<\/QueryProvider>/);
+});
+
+// Review R107-01 / devbie ADR-080 D1: the error channel fans out to every
+// subscriber, so the layout mounts exactly one, inside HostProviders where the
+// host's ApiErrorMessageProvider can reach it.
+test("the root layout mounts exactly one error subscriber inside HostProviders", async () => {
+  const layout = await readFile(new URL("src/app/layout.tsx", repoRoot), "utf8");
+  assert.equal(layout.match(/<ApiErrorToast\b/g)?.length, 1, "exactly one <ApiErrorToast /> may be mounted");
+  assert.match(layout, /<HostProviders>[\s\S]*<ApiErrorToast\s*\/>[\s\S]*<\/HostProviders>/);
 });
 
 test("the tooltip primitive uses popover tokens the theme defines", async () => {

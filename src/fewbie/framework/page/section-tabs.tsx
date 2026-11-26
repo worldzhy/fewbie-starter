@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/fewbie/ui/tabs";
 import { useRouteNavigate } from "@/fewbie/framework/feedback/navigation-progress";
 

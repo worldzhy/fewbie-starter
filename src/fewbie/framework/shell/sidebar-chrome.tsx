@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, PanelLeftClose, PanelLeftOpen, type LucideIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/fewbie/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/fewbie/ui/tooltip";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 interface SidebarNavLinkProps {
   href: string;

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { AlertCircle } from "lucide-react";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/fewbie/ui/alert";
 import { Button } from "@/fewbie/ui/button";

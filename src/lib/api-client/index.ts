@@ -29,3 +29,8 @@ export type { RefreshOutcome, SessionBootstrapOutcome } from "./refresh-exchange
 export { replayOnUnauthorized } from "./replay";
 
 export { api, apiClient } from "./client";
+
+export { request } from "./apits";
+export type { ClientRequestConfig } from "./apits";
+
+export { StreamError, throwIfAborted, toStreamError } from "./stream-error";

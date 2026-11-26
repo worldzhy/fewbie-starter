@@ -6,7 +6,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { CalendarIcon } from "lucide-react";
 import type { Locale } from "react-day-picker";
 import { enUS, zhCN } from "react-day-picker/locale";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import { Button } from "@/fewbie/ui/button";
 import { Calendar } from "@/fewbie/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/fewbie/ui/popover";

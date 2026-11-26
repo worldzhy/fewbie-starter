@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 type NavigationProgress = {
   /**

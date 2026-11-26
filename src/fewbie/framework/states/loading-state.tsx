@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 interface LoadingStateProps {
   /** Visible label; callers that need i18n resolve it before passing it in. */

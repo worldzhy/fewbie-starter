@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Inbox } from "lucide-react";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 /**
  * Shared empty state. Pages pass resolved copy (and an optional action) so the

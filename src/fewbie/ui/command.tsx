@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/fewbie/ui/dialog";
 import { InputGroup, InputGroupAddon } from "@/fewbie/ui/input-group";

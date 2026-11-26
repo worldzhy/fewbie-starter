@@ -15,11 +15,17 @@ import { listFiles, pathExists } from "./lib/walk.mjs";
 const NAMED_COMPONENT = /export\s+(?:default\s+)?(?:function|const|class)\s+([A-Z]\w*)/g;
 const EXPORT_LIST = /export\s*\{([^}]+)\}/g;
 
+// A barrel re-exports what another file already defined; counting those names
+// here would blame the barrel rather than the file that owns the component.
+const RE_EXPORT = /^\s*from\s+["']/;
+
 /** Component names exported by one source file. */
 export function exportedComponents(source) {
   const names = new Set();
   for (const match of source.matchAll(NAMED_COMPONENT)) names.add(match[1]);
   for (const match of source.matchAll(EXPORT_LIST)) {
+    const rest = source.slice(match.index + match[0].length);
+    if (RE_EXPORT.test(rest)) continue;
     for (const specifier of match[1].split(",")) {
       const name = specifier
         .trim()

@@ -135,6 +135,22 @@ test("R9 rejects primitive re-exports and duplicated host components", async () 
   assert.ok(violations.some((violation) => /duplicates component "Widget"/.test(violation.message)));
 });
 
+test("R9 ignores barrel re-exports and still catches real duplicates", async () => {
+  const violations = await withProject(
+    {
+      "src/fewbie/ui/button.tsx": "export function Button() { return null; }",
+      // A barrel forwards names it does not own; the owner is checked where it is defined.
+      "src/components/blocks/index.tsx": 'export { Widget } from "./widget";',
+      "src/components/blocks/widget.tsx": "export function Widget() { return null; }",
+      "src/components/other/widget.tsx": "export function Widget() { return null; }",
+    },
+    checkPrimitives,
+  );
+  assert.equal(violations.length, 1);
+  assert.ok(violations.some((violation) => /duplicates component "Widget"/.test(violation.message)));
+  assert.ok(!violations.some((violation) => violation.file === "src/components/blocks/index.tsx"));
+});
+
 test("R9 accepts host components that do not shadow primitives", async () => {
   const violations = await withProject(
     {

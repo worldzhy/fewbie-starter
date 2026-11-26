@@ -48,7 +48,9 @@ export function SidebarShell({
         {footer}
       </aside>
 
-      <main className={cn("flex-1 bg-background transition-[margin] duration-200", collapsed ? "ml-16" : "ml-60")}>
+      <main
+        className={cn("min-w-0 flex-1 bg-background transition-[margin] duration-200", collapsed ? "ml-16" : "ml-60")}
+      >
         {children}
       </main>
     </div>

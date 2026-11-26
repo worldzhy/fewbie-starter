@@ -106,8 +106,8 @@ function SheetDescription({ className, ...props }: React.ComponentProps<typeof S
 export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription };
 
 // ---------------------------------------------------------------------------
-// SheetPanel —— 标准右侧抽屉布局复合组件
-// 统一 flex-col 头尾分离结构 + 滚动内容区 + 宽度分级 variant
+// SheetPanel — a compound component for the standard right-side sheet layout
+// Unified flex-col header/content/footer split + scrollable content area + width variants
 // ---------------------------------------------------------------------------
 
 type SheetPanelVariant = "default" | "md" | "large" | "full";

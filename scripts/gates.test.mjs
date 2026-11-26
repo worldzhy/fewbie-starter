@@ -216,6 +216,31 @@ test("R9 accepts host components that do not shadow primitives", async () => {
   assert.deepEqual(violations, []);
 });
 
+test("R9 flags a primitive shadow reachable from src/app", async () => {
+  const violations = await withProject(
+    {
+      "src/fewbie/ui/button.tsx": "export function Button() { return null; }",
+      "src/app/dashboard/actions.tsx": "export function Button() { return null; }",
+    },
+    checkPrimitives,
+  );
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0].file, "src/app/dashboard/actions.tsx");
+  assert.match(violations[0].message, /primitive "Button"/);
+});
+
+test("R9 allows route files to repeat default component names", async () => {
+  const violations = await withProject(
+    {
+      "src/fewbie/ui/button.tsx": "export function Button() { return null; }",
+      "src/app/projects/page.tsx": "export default function Page() { return null; }",
+      "src/app/settings/page.tsx": "export default function Page() { return null; }",
+    },
+    checkPrimitives,
+  );
+  assert.deepEqual(violations, []);
+});
+
 test("R10 rejects non-kebab-case route segments and allows route syntax", async () => {
   const violations = await withProject(
     {
